@@ -6,6 +6,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as Joi from 'joi';
 import { CommonModule } from './common/common.module';
+import { JwtModule } from './jwt/jwt.module';
 import { User } from './users/entities/user.entity';
 import { UsersModule } from './users/users.module';
 
@@ -39,6 +40,10 @@ import { UsersModule } from './users/users.module';
       synchronize: process.env.NODE_ENV !== 'prod',
       logging: true,
       entities: [User],
+    }),
+    JwtModule.forRoot({
+      isGlobal: true,
+      privateKey: process.env.JWT_SECRET_KEY,
     }),
     UsersModule,
     CommonModule,
