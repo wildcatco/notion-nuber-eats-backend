@@ -7,7 +7,7 @@ export class CreateAccountInput extends PickType(User, [
   'email',
   'password',
   'role',
-]) {}
+] as const) {}
 
 @ObjectType()
 export class CreateAccountOutput extends CoreOutputDto {}
