@@ -6,8 +6,9 @@ import {
   CreateAccountInput,
   CreateAccountOutput,
 } from './dtos/create-account.dto';
-import { EditProfileInput } from './dtos/edit-profile.dto';
+import { EditProfileInput, EditProfileOutput } from './dtos/edit-profile.dto';
 import { LoginInput, LoginOutput } from './dtos/login.dto';
+import { UserProfileInput, UserProfileOutput } from './dtos/user-profile.dto';
 import { VerifyEmailInput, VerifyEmailOutput } from './dtos/verify-email.dto';
 import { User } from './entities/user.entity';
 import { Verification } from './entities/verification.entity';
@@ -69,30 +70,56 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { id } });
   }
 
-  async editProfile(userId: number, { email, password }: EditProfileInput) {
-    const user = await this.findById(userId);
-    if (email) {
-      this.usersRepository.update(userId, {
-        email,
-        verified: false,
-      });
-
-      const verification = await this.verificationsRepository.findOne({
-        where: { user: { id: userId } },
-      });
-      if (verification) {
-        await this.verificationsRepository.delete(verification.id);
+  async userProfile({ userId }: UserProfileInput): Promise<UserProfileOutput> {
+    try {
+      const user = await this.findById(userId);
+      if (!user) {
+        throw new Error();
       }
-      await this.verificationsRepository.save(
-        this.verificationsRepository.create({
-          user,
-        }),
-      );
+      return {
+        ok: true,
+        user,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: 'User Not Found',
+      };
     }
-    if (password) {
-      this.usersRepository.update(userId, {
-        password,
-      });
+  }
+
+  async editProfile(
+    userId: number,
+    { email, password }: EditProfileInput,
+  ): Promise<EditProfileOutput> {
+    try {
+      const user = await this.findById(userId);
+      if (email) {
+        this.usersRepository.update(userId, {
+          email,
+          verified: false,
+        });
+
+        const verification = await this.verificationsRepository.findOne({
+          where: { user: { id: userId } },
+        });
+        if (verification) {
+          await this.verificationsRepository.delete(verification.id);
+        }
+        await this.verificationsRepository.save(
+          this.verificationsRepository.create({
+            user,
+          }),
+        );
+      }
+      if (password) {
+        this.usersRepository.update(userId, {
+          password,
+        });
+      }
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error };
     }
   }
 
@@ -101,7 +128,6 @@ export class UsersService {
       const verification = await this.verificationsRepository.findOne({
         where: { code },
         relations: ['user'],
-        // loadRelationIds: true, // id만 불러옴
       });
       if (verification) {
         verification.user.verified = true;
