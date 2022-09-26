@@ -72,8 +72,11 @@ export class UsersService {
   async editProfile(userId: number, { email, password }: EditProfileInput) {
     const user = await this.findById(userId);
     if (email) {
-      user.email = email;
-      user.verified = false;
+      this.usersRepository.update(userId, {
+        email,
+        verified: false,
+      });
+
       const verification = await this.verificationsRepository.findOne({
         where: { user: { id: userId } },
       });
@@ -87,9 +90,10 @@ export class UsersService {
       );
     }
     if (password) {
-      user.password = password;
+      this.usersRepository.update(userId, {
+        password,
+      });
     }
-    return this.usersRepository.save(user);
   }
 
   async verifyEmail({ code }: VerifyEmailInput): Promise<VerifyEmailOutput> {
@@ -101,7 +105,9 @@ export class UsersService {
       });
       if (verification) {
         verification.user.verified = true;
-        await this.usersRepository.save(verification.user);
+        await this.usersRepository.update(verification.user.id, {
+          verified: true,
+        });
         await this.verificationsRepository.delete(verification.id);
         return { ok: true };
       }
