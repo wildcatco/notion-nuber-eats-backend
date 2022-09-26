@@ -8,6 +8,7 @@ import {
 } from './dtos/create-account.dto';
 import { EditProfileInput } from './dtos/edit-profile.dto';
 import { LoginInput, LoginOutput } from './dtos/login.dto';
+import { VerifyEmailInput, VerifyEmailOutput } from './dtos/verify-email.dto';
 import { User } from './entities/user.entity';
 import { Verification } from './entities/verification.entity';
 
@@ -89,5 +90,24 @@ export class UsersService {
       user.password = password;
     }
     return this.usersRepository.save(user);
+  }
+
+  async verifyEmail({ code }: VerifyEmailInput): Promise<VerifyEmailOutput> {
+    try {
+      const verification = await this.verificationsRepository.findOne({
+        where: { code },
+        relations: ['user'],
+        // loadRelationIds: true, // id만 불러옴
+      });
+      if (verification) {
+        verification.user.verified = true;
+        await this.usersRepository.save(verification.user);
+        await this.verificationsRepository.delete(verification.id);
+        return { ok: true };
+      }
+      return { ok: false, error: 'Verification not found.' };
+    } catch (error) {
+      return { ok: false, error };
+    }
   }
 }
