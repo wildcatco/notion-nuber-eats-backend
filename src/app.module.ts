@@ -12,6 +12,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import * as Joi from 'joi';
 import { JwtMiddleware } from './jwt/jwt.middleware';
 import { JwtModule } from './jwt/jwt.module';
+import { MailModule } from './mail/mail.module';
 import { User } from './users/entities/user.entity';
 import { Verification } from './users/entities/verification.entity';
 import { UsersModule } from './users/users.module';
@@ -30,6 +31,9 @@ import { UsersModule } from './users/users.module';
         DB_PASSWORD: Joi.string().required(),
         DB_NAME: Joi.string().required(),
         JWT_SECRET_KEY: Joi.string().required(),
+        MAILGUN_API_KEY: Joi.string().required(),
+        MAILGUN_DOMAIN_NAME: Joi.string().required(),
+        MAILGUN_FROM_EMAIL: Joi.string().required(),
       }),
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
@@ -51,6 +55,12 @@ import { UsersModule } from './users/users.module';
     JwtModule.forRoot({
       isGlobal: true,
       privateKey: process.env.JWT_SECRET_KEY,
+    }),
+    MailModule.forRoot({
+      isGlobal: true,
+      apiKey: process.env.MAILGUN_API_KEY,
+      domain: process.env.MAILGUN_DOMAIN_NAME,
+      fromEmail: process.env.MAILGUN_FROM_EMAIL,
     }),
     UsersModule,
   ],
