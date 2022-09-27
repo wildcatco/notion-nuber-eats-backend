@@ -91,13 +91,14 @@ export class UsersService {
     { email, password }: EditProfileInput,
   ): Promise<EditProfileOutput> {
     try {
-      const user = await this.usersRepository.findOne({
-        where: { id: userId },
-      });
       if (email) {
         this.usersRepository.update(userId, {
           email,
           verified: false,
+        });
+
+        const updatedUser = await this.usersRepository.findOne({
+          where: { id: userId },
         });
 
         const verification = await this.verificationsRepository.findOne({
@@ -106,13 +107,14 @@ export class UsersService {
         if (verification) {
           await this.verificationsRepository.delete(verification.id);
         }
+
         const newVerification = await this.verificationsRepository.save(
           this.verificationsRepository.create({
-            user,
+            user: updatedUser,
           }),
         );
         this.mailService.sendVerificationEmail(
-          user.email,
+          updatedUser.email,
           newVerification.code,
         );
       }
@@ -123,7 +125,7 @@ export class UsersService {
       }
       return { ok: true };
     } catch (error) {
-      return { ok: false, error };
+      return { ok: false, error: 'Could not update profile' };
     }
   }
 
