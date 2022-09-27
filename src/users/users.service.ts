@@ -69,16 +69,11 @@ export class UsersService {
     }
   }
 
-  findById(id: number): Promise<User> {
-    return this.usersRepository.findOne({ where: { id } });
-  }
-
-  async userProfile({ userId }: UserProfileInput): Promise<UserProfileOutput> {
+  async findById({ userId }: UserProfileInput): Promise<UserProfileOutput> {
     try {
-      const user = await this.findById(userId);
-      if (!user) {
-        throw new Error();
-      }
+      const user = await this.usersRepository.findOneOrFail({
+        where: { id: userId },
+      });
       return {
         ok: true,
         user,
@@ -96,7 +91,9 @@ export class UsersService {
     { email, password }: EditProfileInput,
   ): Promise<EditProfileOutput> {
     try {
-      const user = await this.findById(userId);
+      const user = await this.usersRepository.findOne({
+        where: { id: userId },
+      });
       if (email) {
         this.usersRepository.update(userId, {
           email,
