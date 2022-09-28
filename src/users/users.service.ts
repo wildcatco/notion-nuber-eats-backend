@@ -92,6 +92,11 @@ export class UsersService {
   ): Promise<EditProfileOutput> {
     try {
       if (email) {
+        const exist = await this.usersRepository.findOne({ where: { email } });
+        if (exist) {
+          return { ok: false, error: 'Email is already in use' };
+        }
+
         this.usersRepository.update(userId, {
           email,
           verified: false,

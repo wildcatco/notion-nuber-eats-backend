@@ -219,6 +219,14 @@ describe('UsersService', () => {
   });
 
   describe('editProfile', () => {
+    it('should not change email if already in use', async () => {
+      usersRepository.findOne.mockResolvedValue(true);
+
+      const result = await service.editProfile(1, { email: 'email' });
+
+      expect(result).toEqual({ ok: false, error: 'Email is already in use' });
+    });
+
     it('should change email', async () => {
       const newUser = {
         email: 'new@mail.com',
@@ -237,6 +245,7 @@ describe('UsersService', () => {
         input: { email: newUser.email },
       };
 
+      usersRepository.findOne.mockResolvedValueOnce(null);
       usersRepository.findOne.mockResolvedValue(newUser);
       verificationsRepository.findOne.mockResolvedValue(oldVerification);
       verificationsRepository.create.mockReturnValue(newVerification);
@@ -253,7 +262,7 @@ describe('UsersService', () => {
         newUser,
       );
 
-      expect(usersRepository.findOne).toHaveBeenCalledTimes(1);
+      expect(usersRepository.findOne).toHaveBeenCalledTimes(2);
       expect(usersRepository.findOne).toHaveBeenCalledWith({
         where: { id: editProfileArgs.userId },
       });
@@ -290,6 +299,8 @@ describe('UsersService', () => {
         userId: 777,
         input: { password: 'newPassword' },
       };
+
+      usersRepository.findOne.mockResolvedValueOnce(null);
 
       const result = await service.editProfile(
         editProfileArgs.userId,
