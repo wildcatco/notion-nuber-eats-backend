@@ -1,7 +1,9 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { User } from 'src/users/entities/user.entity';
 import * as request from 'supertest';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { AppModule } from './../src/app.module';
 
 jest.mock('got', () => {
@@ -18,6 +20,7 @@ const testUser = {
 
 describe('UserModule (e2e)', () => {
   let app: INestApplication;
+  let usersRepository: Repository<User>;
   let jwtToken: string;
 
   beforeAll(async () => {
@@ -26,6 +29,7 @@ describe('UserModule (e2e)', () => {
     }).compile();
 
     app = module.createNestApplication();
+    usersRepository = module.get(getRepositoryToken(User));
     await app.init();
   });
 
@@ -151,7 +155,67 @@ describe('UserModule (e2e)', () => {
     });
   });
 
-  it.todo('userProfile');
+  describe('userProfile', () => {
+    let userId: number;
+
+    beforeAll(async () => {
+      const [user] = await usersRepository.find();
+      userId = user.id;
+    });
+
+    it("should see a user's profile", () => {
+      return request(app.getHttpServer())
+        .post(GRAPHQL_ENDPOINT)
+        .set('X-JWT', jwtToken)
+        .send({
+          query: `
+          {
+            userProfile(userId:${userId}) {
+              ok
+              error
+              user {
+                id
+              }
+            }
+          }
+          `,
+        })
+        .expect(200)
+        .expect((res) => {
+          const { ok, error, user } = res.body.data.userProfile;
+          expect(ok).toBe(true);
+          expect(error).toBeNull();
+          expect(user.id).toBe(userId);
+        });
+    });
+
+    it('should not find a profile', () => {
+      return request(app.getHttpServer())
+        .post(GRAPHQL_ENDPOINT)
+        .set('X-JWT', jwtToken)
+        .send({
+          query: `
+          {
+            userProfile(userId:777) {
+              ok
+              error
+              user {
+                id
+              }
+            }
+          }
+          `,
+        })
+        .expect(200)
+        .expect((res) => {
+          const { ok, error, user } = res.body.data.userProfile;
+          expect(ok).toBe(false);
+          expect(error).toBe('User Not Found');
+          expect(user).toBeNull();
+        });
+    });
+  });
+
   it.todo('me');
   it.todo('verifyEmail');
   it.todo('editProfile');
