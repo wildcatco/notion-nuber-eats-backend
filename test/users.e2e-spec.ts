@@ -316,29 +316,6 @@ describe('UserModule (e2e)', () => {
       verificationCode = verification.code;
     });
 
-    it('should verify email', () => {
-      return request(app.getHttpServer())
-        .post(GRAPHQL_ENDPOINT)
-        .send({
-          query: `
-          mutation {
-            verifyEmail(input: {
-              code: "${verificationCode}"
-            }) {
-              ok
-              error
-            }
-          }
-          `,
-        })
-        .expect(200)
-        .expect((res) => {
-          const { ok, error } = res.body.data.verifyEmail;
-          expect(ok).toBe(true);
-          expect(error).toBeNull();
-        });
-    });
-
     it('should fail on wrong verification code', () => {
       return request(app.getHttpServer())
         .post(GRAPHQL_ENDPOINT)
@@ -359,6 +336,29 @@ describe('UserModule (e2e)', () => {
           const { ok, error } = res.body.data.verifyEmail;
           expect(ok).toBe(false);
           expect(error).toBe('Verification not found');
+        });
+    });
+
+    it('should verify email', () => {
+      return request(app.getHttpServer())
+        .post(GRAPHQL_ENDPOINT)
+        .send({
+          query: `
+          mutation {
+            verifyEmail(input: {
+              code: "${verificationCode}"
+            }) {
+              ok
+              error
+            }
+          }
+          `,
+        })
+        .expect(200)
+        .expect((res) => {
+          const { ok, error } = res.body.data.verifyEmail;
+          expect(ok).toBe(true);
+          expect(error).toBeNull();
         });
     });
   });
