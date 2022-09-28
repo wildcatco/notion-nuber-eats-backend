@@ -97,7 +97,7 @@ export class UsersService {
           return { ok: false, error: 'Email is already in use' };
         }
 
-        this.usersRepository.update(userId, {
+        await this.usersRepository.update(userId, {
           email,
           verified: false,
         });
