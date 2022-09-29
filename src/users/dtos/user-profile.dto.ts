@@ -1,6 +1,6 @@
 import { ArgsType, Field, ObjectType } from '@nestjs/graphql';
 import { User } from '../entities/user.entity';
-import { CoreOutputDto } from './../../common/dtos/output.dto';
+import { CoreOutput } from './../../common/dtos/output.dto';
 
 @ArgsType()
 export class UserProfileInput {
@@ -9,7 +9,7 @@ export class UserProfileInput {
 }
 
 @ObjectType()
-export class UserProfileOutput extends CoreOutputDto {
+export class UserProfileOutput extends CoreOutput {
   @Field((type) => User, { nullable: true })
   user?: User;
 }
