@@ -28,22 +28,22 @@ export class UsersResolver {
     return this.usersService.login(loginInput);
   }
 
-  @Roles('Any')
   @Query((returns) => User)
+  @Roles('Any')
   me(@AuthUser() authUser: User) {
     return authUser;
   }
 
-  @Roles('Any')
   @Query((returns) => UserProfileOutput)
+  @Roles('Any')
   userProfile(
     @Args() userProfileInput: UserProfileInput,
   ): Promise<UserProfileOutput> {
     return this.usersService.findById(userProfileInput);
   }
 
-  @Roles('Any')
   @Mutation((returns) => EditProfileOutput)
+  @Roles('Any')
   editProfile(
     @AuthUser() authUser: User,
     @Args('input') editProfileInput: EditProfileInput,

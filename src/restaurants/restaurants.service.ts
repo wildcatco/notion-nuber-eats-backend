@@ -6,16 +6,20 @@ import {
   CreateRestaurantInput,
   CreateRestaurantOutput,
 } from './dtos/create-restaurant.dto';
+import {
+  EditRestaurantInput,
+  EditRestaurantOutput,
+} from './dtos/edit-restaurant.dto';
 import { Category } from './entities/category.entity';
 import { Restaurant } from './entities/restaurant.entity';
+import { CategoryRepository } from './repositories/category.repository';
 
 @Injectable()
 export class RestaurantsService {
   constructor(
     @InjectRepository(Restaurant)
     private readonly restaurantsRepository: Repository<Restaurant>,
-    @InjectRepository(Category)
-    private readonly categoriesRepository: Repository<Category>,
+    private readonly categoriesRepository: CategoryRepository,
   ) {}
 
   async createRestaurant(
@@ -27,21 +31,9 @@ export class RestaurantsService {
         createRestaurantInput,
       );
       newRestaurant.owner = owner;
-      const categoryName = createRestaurantInput.categoryName
-        .trim()
-        .toLowerCase();
-      const categorySlug = categoryName.replace(/ /g, '-');
-      let category = await this.categoriesRepository.findOne({
-        where: { slug: categorySlug },
-      });
-      if (!category) {
-        category = await this.categoriesRepository.save(
-          this.categoriesRepository.create({
-            slug: categorySlug,
-            name: categoryName,
-          }),
-        );
-      }
+      const category = await this.categoriesRepository.getOrCreate(
+        createRestaurantInput.categoryName,
+      );
       newRestaurant.category = category;
       await this.restaurantsRepository.save(newRestaurant);
       return {
@@ -51,6 +43,52 @@ export class RestaurantsService {
       return {
         ok: false,
         error: 'Could not create restaurant',
+      };
+    }
+  }
+
+  async editRestaurant(
+    owner: User,
+    editRestaurantInput: EditRestaurantInput,
+  ): Promise<EditRestaurantOutput> {
+    try {
+      const restaurant = await this.restaurantsRepository.findOne({
+        where: { id: editRestaurantInput.restaurantId },
+      });
+      if (!restaurant) {
+        return {
+          ok: false,
+          error: 'Restaurant not found',
+        };
+      }
+      if (owner.id !== restaurant.ownerId) {
+        return {
+          ok: false,
+          error: "You can't edit restaurant that you don't own",
+        };
+      }
+      let category: Category = null;
+      if (editRestaurantInput.categoryName) {
+        category = await this.categoriesRepository.getOrCreate(
+          editRestaurantInput.categoryName,
+        );
+      }
+      await this.restaurantsRepository.save([
+        {
+          id: editRestaurantInput.restaurantId,
+          ...editRestaurantInput,
+          ...(category && { category }),
+        },
+      ]);
+      return {
+        ok: true,
+      };
+    } catch (error) {
+      console.log(error);
+
+      return {
+        ok: false,
+        error: 'Could not edit restaurant',
       };
     }
   }
