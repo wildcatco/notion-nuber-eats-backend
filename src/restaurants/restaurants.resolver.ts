@@ -11,6 +11,7 @@ import { AuthUser } from 'src/auth/auth-user.decorator';
 import { Roles } from 'src/auth/role.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { AllCategoriesOutput } from './dtos/all-categories.dto';
+import { CategoryInput, CategoryOutput } from './dtos/category.dto';
 import {
   CreateRestaurantInput,
   CreateRestaurantOutput,
@@ -77,5 +78,12 @@ export class CategoriesResolver {
   @Query((type) => AllCategoriesOutput)
   async allCategories(): Promise<AllCategoriesOutput> {
     return this.restaurantsService.allCategories();
+  }
+
+  @Query((type) => CategoryOutput)
+  category(
+    @Args('input') categoryInput: CategoryInput,
+  ): Promise<CategoryOutput> {
+    return this.restaurantsService.findCategoryBySlug(categoryInput);
   }
 }
