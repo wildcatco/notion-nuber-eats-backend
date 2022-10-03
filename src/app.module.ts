@@ -44,6 +44,7 @@ import { UsersModule } from './users/users.module';
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: true,
+      sortSchema: true,
       context: ({ req }) => ({ user: req['user'] }),
     }),
     TypeOrmModule.forRoot({
