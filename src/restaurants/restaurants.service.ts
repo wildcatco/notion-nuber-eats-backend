@@ -83,15 +83,13 @@ export class RestaurantsService {
     if (categoryName) {
       category = await this.categoriesRepository.getOrCreate(categoryName);
     }
-    await this.restaurantsRepository.save([
-      {
-        id: restaurantId,
-        name,
-        coverImg,
-        address,
-        category,
-      },
-    ]);
+    await this.restaurantsRepository.save({
+      id: restaurantId,
+      name,
+      coverImg,
+      address,
+      category,
+    });
     return successResponse();
   }
 

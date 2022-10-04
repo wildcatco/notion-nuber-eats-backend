@@ -36,15 +36,19 @@ export class UsersService {
     if (emailInUse) {
       return errorResponse('Email is already in use');
     }
-    const user = await this.usersRepository.save(
-      this.usersRepository.create({ email, password, role }),
-    );
-    const verification = await this.verificationsRepository.save(
-      this.verificationsRepository.create({
-        user,
-      }),
-    );
+
+    const user = await this.usersRepository.save({
+      email,
+      password,
+      role,
+    });
+
+    const verification = await this.verificationsRepository.save({
+      user,
+    });
+
     this.mailService.sendVerificationEmail(user.email, verification.code);
+
     return successResponse();
   }
 
@@ -84,12 +88,11 @@ export class UsersService {
         return errorResponse('Email is already in use');
       }
 
-      await this.usersRepository.update(userId, {
+      const user = await this.usersRepository.save({
+        id: userId,
         email,
         verified: false,
       });
-
-      const updatedUser = await this.usersRepository.findOneBy({ id: userId });
 
       const verification = await this.verificationsRepository.findOneBy({
         user: { id: userId },
@@ -98,16 +101,12 @@ export class UsersService {
         await this.verificationsRepository.delete(verification.id);
       }
 
-      const newVerification = await this.verificationsRepository.save(
-        this.verificationsRepository.create({
-          user: updatedUser,
-        }),
-      );
-      this.mailService.sendVerificationEmail(
-        updatedUser.email,
-        newVerification.code,
-      );
+      const newVerification = await this.verificationsRepository.save({
+        user,
+      });
+      this.mailService.sendVerificationEmail(user.email, newVerification.code);
     }
+
     if (password) {
       const user = await this.usersRepository.findOneBy({ id: userId });
       user.password = password;
