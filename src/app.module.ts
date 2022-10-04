@@ -24,23 +24,25 @@ import { User } from './users/entities/user.entity';
 import { Verification } from './users/entities/verification.entity';
 import { UsersModule } from './users/users.module';
 
+const nodeEnv = process.env.NODE_ENV;
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: process.env.NODE_ENV === 'dev' ? '.env.dev' : '.env.test',
-      ignoreEnvFile: process.env.NODE_ENV === 'prod',
+      envFilePath: nodeEnv === 'dev' ? '.env.dev' : '.env.test',
+      ignoreEnvFile: nodeEnv === 'prod',
       validationSchema: Joi.object({
-        NODE_ENV: Joi.string().valid('dev', 'prod', 'test').required(),
-        DB_HOST: Joi.string().required(),
-        DB_PORT: Joi.string().required(),
-        DB_USERNAME: Joi.string().required(),
-        DB_PASSWORD: Joi.string().required(),
-        DB_NAME: Joi.string().required(),
-        JWT_SECRET_KEY: Joi.string().required(),
-        MAILGUN_API_KEY: Joi.string().required(),
-        MAILGUN_DOMAIN_NAME: Joi.string().required(),
-        MAILGUN_FROM_EMAIL: Joi.string().required(),
+        NODE_ENV: Joi.valid('dev', 'prod', 'test').required(),
+        DB_HOST: Joi.required(),
+        DB_PORT: Joi.required(),
+        DB_USERNAME: Joi.required(),
+        DB_PASSWORD: Joi.required(),
+        DB_NAME: Joi.required(),
+        JWT_SECRET_KEY: Joi.required(),
+        MAILGUN_API_KEY: Joi.required(),
+        MAILGUN_DOMAIN_NAME: Joi.required(),
+        MAILGUN_FROM_EMAIL: Joi.required(),
       }),
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
@@ -56,16 +58,14 @@ import { UsersModule } from './users/users.module';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      synchronize: process.env.NODE_ENV !== 'prod',
-      logging: process.env.NODE_ENV === 'dev',
+      synchronize: nodeEnv !== 'prod',
+      logging: nodeEnv === 'dev',
       entities: [User, Verification, Restaurant, Category, Dish, Order],
     }),
     JwtModule.forRoot({
-      isGlobal: true,
       privateKey: process.env.JWT_SECRET_KEY,
     }),
     MailModule.forRoot({
-      isGlobal: true,
       apiKey: process.env.MAILGUN_API_KEY,
       domain: process.env.MAILGUN_DOMAIN_NAME,
       fromEmail: process.env.MAILGUN_FROM_EMAIL,
@@ -75,9 +75,6 @@ import { UsersModule } from './users/users.module';
     RestaurantsModule,
     OrdersModule,
   ],
-
-  controllers: [],
-  providers: [],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
