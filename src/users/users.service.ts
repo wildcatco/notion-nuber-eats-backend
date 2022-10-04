@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CatchError } from 'src/common/common.decorators';
+import { errorResponse, successResponse } from 'src/common/common.helpers';
 import { MailService } from 'src/mail/mail.service';
 import { Repository } from 'typeorm';
 import { JwtService } from './../jwt/jwt.service';
@@ -31,10 +32,11 @@ export class UsersService {
     password,
     role,
   }: CreateAccountInput): Promise<CreateAccountOutput> {
-    const exists = await this.usersRepository.findOne({ where: { email } });
-    if (exists) {
-      return { ok: false, error: 'There is a user with that email already' };
+    const emailInUse = await this.usersRepository.findOne({ where: { email } });
+    if (emailInUse) {
+      return errorResponse('Email is already in use');
     }
+
     const user = await this.usersRepository.save(
       this.usersRepository.create({ email, password, role }),
     );
@@ -44,24 +46,23 @@ export class UsersService {
       }),
     );
     this.mailService.sendVerificationEmail(user.email, verification.code);
-    return { ok: true };
+    return successResponse();
   }
 
   @CatchError('Failed to login')
   async login({ email, password }: LoginInput): Promise<LoginOutput> {
     const user = await this.usersRepository.findOne({ where: { email } });
     if (!user) {
-      return { ok: false, error: 'User not found' };
+      return errorResponse('User not found with given email');
     }
+
     const passwordCorrect = await user.checkPassword(password);
     if (!passwordCorrect) {
-      return {
-        ok: false,
-        error: 'Wrong password',
-      };
+      return errorResponse('Wrong password');
     }
+
     const token = this.jwtService.sign(user.id);
-    return { ok: true, token };
+    return successResponse<LoginOutput>({ token });
   }
 
   @CatchError('Failed to find user')
@@ -70,15 +71,9 @@ export class UsersService {
       where: { id: userId },
     });
     if (!user) {
-      return {
-        ok: false,
-        error: 'User Not Found',
-      };
+      return errorResponse('User not found with given id');
     }
-    return {
-      ok: true,
-      user,
-    };
+    return successResponse<UserProfileOutput>({ user });
   }
 
   @CatchError('Failed to edit profile')
@@ -87,9 +82,11 @@ export class UsersService {
     { email, password }: EditProfileInput,
   ): Promise<EditProfileOutput> {
     if (email) {
-      const exist = await this.usersRepository.findOne({ where: { email } });
-      if (exist) {
-        return { ok: false, error: 'Email is already in use' };
+      const emailInUse = await this.usersRepository.findOne({
+        where: { email },
+      });
+      if (emailInUse) {
+        return errorResponse('Email is already in use');
       }
 
       await this.usersRepository.update(userId, {
@@ -123,7 +120,7 @@ export class UsersService {
         password,
       });
     }
-    return { ok: true };
+    return successResponse();
   }
 
   @CatchError('Failed to verify email')
@@ -137,8 +134,8 @@ export class UsersService {
         verified: true,
       });
       await this.verificationsRepository.delete(verification.id);
-      return { ok: true };
+      return successResponse();
     }
-    return { ok: false, error: 'Verification not found' };
+    return errorResponse('Verification not found with given code');
   }
 }

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CatchError } from 'src/common/common.decorators';
+import { errorResponse, successResponse } from 'src/common/common.helpers';
 import { User } from 'src/users/entities/user.entity';
 import { ILike, Repository } from 'typeorm';
 import { AllCategoriesOutput } from './dtos/all-categories.dto';
@@ -55,9 +56,7 @@ export class RestaurantsService {
     );
     newRestaurant.category = category;
     await this.restaurantsRepository.save(newRestaurant);
-    return {
-      ok: true,
-    };
+    return successResponse();
   }
 
   @CatchError('Failed to edit restaurant')
@@ -69,16 +68,10 @@ export class RestaurantsService {
       where: { id: editRestaurantInput.restaurantId },
     });
     if (!restaurant) {
-      return {
-        ok: false,
-        error: 'Restaurant not found',
-      };
+      return errorResponse('Restaurant not found with given id');
     }
     if (owner.id !== restaurant.ownerId) {
-      return {
-        ok: false,
-        error: "You can't edit restaurant that you don't own",
-      };
+      return errorResponse('Only owner can edit restaurant');
     }
     let category: Category = null;
     if (editRestaurantInput.categoryName) {
@@ -93,9 +86,7 @@ export class RestaurantsService {
         ...(category && { category }),
       },
     ]);
-    return {
-      ok: true,
-    };
+    return successResponse();
   }
 
   @CatchError('Failed to delete restaurant')
@@ -107,30 +98,19 @@ export class RestaurantsService {
       where: { id: restaurantId },
     });
     if (!restaurant) {
-      return {
-        ok: false,
-        error: 'Restaurant not found',
-      };
+      return errorResponse('Restaurant not found with given id');
     }
     if (owner.id !== restaurant.ownerId) {
-      return {
-        ok: false,
-        error: "You can't delete restaurant that you don't own",
-      };
+      return errorResponse('Only owner can delete restaurant');
     }
     await this.restaurantsRepository.delete(restaurantId);
-    return {
-      ok: true,
-    };
+    return successResponse();
   }
 
   @CatchError('Failed to load categories')
   async allCategories(): Promise<AllCategoriesOutput> {
     const categories = await this.categoriesRepository.find();
-    return {
-      ok: true,
-      categories,
-    };
+    return successResponse<AllCategoriesOutput>({ categories });
   }
 
   countRestaurants(category: Category): Promise<number> {
@@ -149,10 +129,7 @@ export class RestaurantsService {
       relations: ['restaurants'],
     });
     if (!category) {
-      return {
-        ok: false,
-        error: 'Category not found',
-      };
+      return errorResponse('Category not found with given slug');
     }
     const restaurants = await this.restaurantsRepository.find({
       where: {
@@ -163,12 +140,11 @@ export class RestaurantsService {
     });
     category.restaurants = restaurants;
     const totalResults = await this.countRestaurants(category);
-    return {
-      ok: true,
+    return successResponse<CategoryOutput>({
       totalPages: Math.ceil(totalResults / 25),
       category,
       restaurants,
-    };
+    });
   }
 
   @CatchError('Failed to load restaurants')
@@ -178,12 +154,11 @@ export class RestaurantsService {
         take: 25,
         skip: (page - 1) * 25,
       });
-    return {
-      ok: true,
+    return successResponse<RestaurantsOutput>({
       totalPages: Math.ceil(totalResults / 25),
       totalResults,
       results: restaurants,
-    };
+    });
   }
 
   @CatchError('Failed to load restaurant')
@@ -195,15 +170,9 @@ export class RestaurantsService {
       relations: ['menu'],
     });
     if (!restaurant) {
-      return {
-        ok: false,
-        error: 'Restaurant not found',
-      };
+      return errorResponse('Restaurant not found with given id');
     }
-    return {
-      ok: true,
-      restaurant,
-    };
+    return successResponse<RestaurantOutput>({ restaurant });
   }
 
   @CatchError('Failed to search for restaurants')
@@ -220,12 +189,11 @@ export class RestaurantsService {
         take: 25,
         skip: (page - 1) * 25,
       });
-    return {
-      ok: true,
+    return successResponse<SearchRestaurantOutput>({
       restaurants,
       totalResults,
       totalPages: Math.ceil(totalResults / 25),
-    };
+    });
   }
 
   @CatchError('Failed to create dish')
@@ -237,42 +205,32 @@ export class RestaurantsService {
       where: { id: createDishInput.restaurantId },
     });
     if (!restaurant) {
-      return {
-        ok: false,
-        error: 'Restaurant not found',
-      };
+      return errorResponse('Restaurant not found with given id');
     }
     if (owner.id !== restaurant.ownerId) {
-      return {
-        ok: false,
-        error: 'Only owner of the restaurant can add menu',
-      };
+      return errorResponse('Only owner can add menu');
     }
     await this.dishesRepository.save({
       ...createDishInput,
       restaurant,
     });
-    return {
-      ok: true,
-    };
+    return successResponse();
   }
 
   async checkDish(dishId: number, ownerId: number, toDo: 'edit' | 'delete') {
+    const error = { notFound: false, notOwner: false };
     const dish = await this.dishesRepository.findOne({
       where: { id: dishId },
       relations: ['restaurant'],
     });
     if (!dish) {
-      return {
-        ok: false,
-        error: 'Dish not found',
-      };
+      error.notFound = true;
+      return error;
+      // return errorResponse('Dish not found with given id');
     }
     if (ownerId !== dish.restaurant.ownerId) {
-      return {
-        ok: false,
-        error: `Only owner can ${toDo} dish`,
-      };
+      error.notOwner = true;
+      // return errorResponse(`Only owner can ${toDo} dish`);
     }
   }
 
@@ -282,18 +240,20 @@ export class RestaurantsService {
     editDishInput: EditDishInput,
   ): Promise<EditDishOutput> {
     const error = await this.checkDish(editDishInput.dishId, owner.id, 'edit');
-    if (error) {
-      return error;
+    if (error.notFound) {
+      return errorResponse('Dish not found with given id');
     }
+    if (error.notOwner) {
+      return errorResponse('Only owner can edit dish');
+    }
+
     await this.dishesRepository.save([
       {
         id: editDishInput.dishId,
         ...editDishInput,
       },
     ]);
-    return {
-      ok: true,
-    };
+    return successResponse();
   }
 
   @CatchError('Failed to delete dish')
@@ -302,12 +262,14 @@ export class RestaurantsService {
     { dishId }: DeleteDishInput,
   ): Promise<DeleteDishOutput> {
     const error = await this.checkDish(dishId, owner.id, 'delete');
-    if (error) {
-      return error;
+    if (error.notFound) {
+      return errorResponse('Dish not found with given id');
     }
+    if (error.notOwner) {
+      return errorResponse('Only owner can delete dish');
+    }
+
     await this.dishesRepository.delete(dishId);
-    return {
-      ok: true,
-    };
+    return successResponse();
   }
 }

@@ -84,7 +84,7 @@ describe('UsersService', () => {
 
       expect(result).toEqual({
         ok: false,
-        error: 'There is a user with that email already',
+        error: 'Email is already in use',
       });
     });
 
@@ -148,7 +148,10 @@ describe('UsersService', () => {
       expect(usersRepository.findOne).toHaveBeenCalledWith({
         where: { email: loginArgs.email },
       });
-      expect(result).toEqual({ ok: false, error: 'User not found' });
+      expect(result).toEqual({
+        ok: false,
+        error: 'User not found with given email',
+      });
     });
 
     it('should fail if the password is wrong', async () => {
@@ -213,7 +216,7 @@ describe('UsersService', () => {
 
       expect(result).toEqual({
         ok: false,
-        error: 'User Not Found',
+        error: 'User not found with given id',
       });
     });
   });
@@ -366,7 +369,10 @@ describe('UsersService', () => {
 
       const result = await service.verifyEmail(verifyEmailArgs);
 
-      expect(result).toEqual({ ok: false, error: 'Verification not found' });
+      expect(result).toEqual({
+        ok: false,
+        error: 'Verification not found with given code',
+      });
     });
 
     it('should fail on exception', async () => {
