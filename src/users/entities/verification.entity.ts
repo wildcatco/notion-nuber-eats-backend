@@ -1,5 +1,5 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { CoreEntity } from 'src/common/entities/core.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 import { BeforeInsert, Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { v4 as uuid4 } from 'uuid';
 import { User } from './user.entity';
@@ -7,7 +7,7 @@ import { User } from './user.entity';
 @InputType({ isAbstract: true })
 @ObjectType()
 @Entity()
-export class Verification extends CoreEntity {
+export class Verification extends BaseEntity {
   @Column()
   @Field((type) => String)
   code: string;

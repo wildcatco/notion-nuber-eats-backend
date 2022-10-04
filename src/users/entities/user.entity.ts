@@ -7,7 +7,7 @@ import {
 } from '@nestjs/graphql';
 import * as bcrypt from 'bcrypt';
 import { IsBoolean, IsEmail, IsEnum, IsString, Length } from 'class-validator';
-import { CoreEntity } from 'src/common/entities/core.entity';
+import { BaseEntity } from 'src/common/entities/base.entity';
 import { Order } from 'src/orders/entities/order.entity';
 import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
 import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany } from 'typeorm';
@@ -23,7 +23,7 @@ registerEnumType(UserRole, { name: 'UserRole' });
 @InputType({ isAbstract: true })
 @ObjectType()
 @Entity()
-export class User extends CoreEntity {
+export class User extends BaseEntity {
   @Field((type) => String)
   @Column({ unique: true })
   @IsEmail()
