@@ -8,7 +8,7 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { AuthUser } from 'src/auth/auth-user.decorator';
-import { Roles } from 'src/auth/role.decorator';
+import { Roles } from 'src/auth/roles.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { AllCategoriesOutput } from './dtos/all-categories.dto';
 import { CategoryInput, CategoryOutput } from './dtos/category.dto';
