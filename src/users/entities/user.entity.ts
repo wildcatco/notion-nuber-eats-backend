@@ -6,7 +6,7 @@ import {
   registerEnumType,
 } from '@nestjs/graphql';
 import * as bcrypt from 'bcrypt';
-import { IsBoolean, IsEmail, IsEnum, IsString } from 'class-validator';
+import { IsBoolean, IsEmail, IsEnum, IsString, Length } from 'class-validator';
 import { CoreEntity } from 'src/common/entities/core.entity';
 import { Order } from 'src/orders/entities/order.entity';
 import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
@@ -20,27 +20,28 @@ export enum UserRole {
 
 registerEnumType(UserRole, { name: 'UserRole' });
 
-@InputType('UserInputType', { isAbstract: true })
+@InputType({ isAbstract: true })
 @ObjectType()
 @Entity()
 export class User extends CoreEntity {
-  @Column({ unique: true })
   @Field((type) => String)
+  @Column({ unique: true })
   @IsEmail()
   email: string;
 
-  @Column()
   @Field((type) => String)
+  @Column()
   @IsString()
+  @Length(8, 16)
   password: string;
 
-  @Column({ type: 'enum', enum: UserRole })
   @Field((type) => UserRole)
+  @Column({ type: 'enum', enum: UserRole })
   @IsEnum(UserRole)
   role: UserRole;
 
-  @Column({ default: false })
   @Field((type) => Boolean)
+  @Column({ default: false })
   @IsBoolean()
   verified: boolean;
 
@@ -61,6 +62,7 @@ export class User extends CoreEntity {
   async hashPassword(): Promise<void> {
     try {
       this.password = await bcrypt.hash(this.password, 10);
+      throw new Error();
     } catch (error) {
       console.log(error);
       throw new InternalServerErrorException();
