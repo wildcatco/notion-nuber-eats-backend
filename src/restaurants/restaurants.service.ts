@@ -62,10 +62,16 @@ export class RestaurantsService {
   @CatchError('Failed to edit restaurant')
   async editRestaurant(
     owner: User,
-    editRestaurantInput: EditRestaurantInput,
+    {
+      restaurantId,
+      address,
+      categoryName,
+      coverImg,
+      name,
+    }: EditRestaurantInput,
   ): Promise<EditRestaurantOutput> {
-    const restaurant = await this.restaurantsRepository.findOne({
-      where: { id: editRestaurantInput.restaurantId },
+    const restaurant = await this.restaurantsRepository.findOneBy({
+      id: restaurantId,
     });
     if (!restaurant) {
       return errorResponse('Restaurant not found with given id');
@@ -74,16 +80,16 @@ export class RestaurantsService {
       return errorResponse('Only owner can edit restaurant');
     }
     let category: Category = null;
-    if (editRestaurantInput.categoryName) {
-      category = await this.categoriesRepository.getOrCreate(
-        editRestaurantInput.categoryName,
-      );
+    if (categoryName) {
+      category = await this.categoriesRepository.getOrCreate(categoryName);
     }
     await this.restaurantsRepository.save([
       {
-        id: editRestaurantInput.restaurantId,
-        ...editRestaurantInput,
-        ...(category && { category }),
+        id: restaurantId,
+        name,
+        coverImg,
+        address,
+        category,
       },
     ]);
     return successResponse();
@@ -94,8 +100,8 @@ export class RestaurantsService {
     owner: User,
     { restaurantId }: DeleteRestaurantInput,
   ): Promise<DeleteRestaurantOutput> {
-    const restaurant = await this.restaurantsRepository.findOne({
-      where: { id: restaurantId },
+    const restaurant = await this.restaurantsRepository.findOneBy({
+      id: restaurantId,
     });
     if (!restaurant) {
       return errorResponse('Restaurant not found with given id');
@@ -201,8 +207,8 @@ export class RestaurantsService {
     owner: User,
     createDishInput: CreateDishInput,
   ): Promise<CreateDishOutput> {
-    const restaurant = await this.restaurantsRepository.findOne({
-      where: { id: createDishInput.restaurantId },
+    const restaurant = await this.restaurantsRepository.findOneBy({
+      id: createDishInput.restaurantId,
     });
     if (!restaurant) {
       return errorResponse('Restaurant not found with given id');

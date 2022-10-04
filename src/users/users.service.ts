@@ -32,11 +32,10 @@ export class UsersService {
     password,
     role,
   }: CreateAccountInput): Promise<CreateAccountOutput> {
-    const emailInUse = await this.usersRepository.findOne({ where: { email } });
+    const emailInUse = await this.usersRepository.findOneBy({ email });
     if (emailInUse) {
       return errorResponse('Email is already in use');
     }
-
     const user = await this.usersRepository.save(
       this.usersRepository.create({ email, password, role }),
     );
@@ -51,7 +50,7 @@ export class UsersService {
 
   @CatchError('Failed to login')
   async login({ email, password }: LoginInput): Promise<LoginOutput> {
-    const user = await this.usersRepository.findOne({ where: { email } });
+    const user = await this.usersRepository.findOneBy({ email });
     if (!user) {
       return errorResponse('User not found with given email');
     }
@@ -67,9 +66,7 @@ export class UsersService {
 
   @CatchError('Failed to find user')
   async findById({ userId }: UserProfileInput): Promise<UserProfileOutput> {
-    const user = await this.usersRepository.findOne({
-      where: { id: userId },
-    });
+    const user = await this.usersRepository.findOneBy({ id: userId });
     if (!user) {
       return errorResponse('User not found with given id');
     }
@@ -82,9 +79,7 @@ export class UsersService {
     { email, password }: EditProfileInput,
   ): Promise<EditProfileOutput> {
     if (email) {
-      const emailInUse = await this.usersRepository.findOne({
-        where: { email },
-      });
+      const emailInUse = await this.usersRepository.findOneBy({ email });
       if (emailInUse) {
         return errorResponse('Email is already in use');
       }
@@ -94,12 +89,10 @@ export class UsersService {
         verified: false,
       });
 
-      const updatedUser = await this.usersRepository.findOne({
-        where: { id: userId },
-      });
+      const updatedUser = await this.usersRepository.findOneBy({ id: userId });
 
-      const verification = await this.verificationsRepository.findOne({
-        where: { user: { id: userId } },
+      const verification = await this.verificationsRepository.findOneBy({
+        user: { id: userId },
       });
       if (verification) {
         await this.verificationsRepository.delete(verification.id);
