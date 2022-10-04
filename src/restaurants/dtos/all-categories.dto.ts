@@ -1,9 +1,9 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { CoreOutput } from 'src/common/dtos/output.dto';
+import { BaseOutput } from 'src/common/dtos/base-output.dto';
 import { Category } from './../entities/category.entity';
 
 @ObjectType()
-export class AllCategoriesOutput extends CoreOutput {
+export class AllCategoriesOutput extends BaseOutput {
   @Field((type) => [Category], { nullable: true })
   categories?: Category[];
 }
