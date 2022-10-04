@@ -4,7 +4,14 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      enableDebugMessages: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      ...(process.env.NODE_ENV === 'prod' && { disableErrorMessages: true }),
+    }),
+  );
   await app.listen(3000);
 }
 
