@@ -109,9 +109,9 @@ export class UsersService {
       );
     }
     if (password) {
-      this.usersRepository.update(userId, {
-        password,
-      });
+      const user = await this.usersRepository.findOneBy({ id: userId });
+      user.password = password;
+      await this.usersRepository.save(user);
     }
     return successResponse();
   }
