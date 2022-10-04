@@ -1,4 +1,8 @@
-export const successResponse = <T>(data?: Omit<T, 'ok' | 'error'>) => ({
+import { BaseOutput } from './dtos/base-output.dto';
+
+export const successResponse = <T>(
+  data?: Required<Omit<T, keyof BaseOutput>>,
+) => ({
   ok: true,
   ...(data && data),
 });
