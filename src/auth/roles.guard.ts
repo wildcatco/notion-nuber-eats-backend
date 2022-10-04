@@ -5,7 +5,7 @@ import { User } from 'src/users/entities/user.entity';
 import { AllowedRoles } from './roles.decorator';
 
 @Injectable()
-export class AuthGuard implements CanActivate {
+export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext) {
