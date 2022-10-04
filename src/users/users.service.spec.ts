@@ -129,7 +129,7 @@ describe('UsersService', () => {
 
       const result = await service.createAccount(createAccountArgs);
 
-      expect(result).toEqual({ ok: false, error: "Couldn't create account" });
+      expect(result).toEqual({ ok: false, error: 'Failed to create account' });
     });
   });
 
@@ -187,7 +187,7 @@ describe('UsersService', () => {
 
       const result = await service.login(loginArgs);
 
-      expect(result).toEqual({ ok: false, error: "Can't log user in" });
+      expect(result).toEqual({ ok: false, error: 'Failed to login' });
     });
   });
 
@@ -196,7 +196,7 @@ describe('UsersService', () => {
       userId: 777,
     };
     it('should find an existing user', async () => {
-      usersRepository.findOneOrFail.mockResolvedValue({ id: 777 });
+      usersRepository.findOne.mockResolvedValue({ id: 777 });
 
       const result = await service.findById(findByIdArgs);
 
@@ -319,7 +319,7 @@ describe('UsersService', () => {
     it('should fail on exception', async () => {
       usersRepository.findOne.mockRejectedValue(new Error());
       const result = await service.editProfile(1, { email: '12' });
-      expect(result).toEqual({ ok: false, error: 'Could not update profile' });
+      expect(result).toEqual({ ok: false, error: 'Failed to edit profile' });
     });
   });
 
@@ -374,7 +374,7 @@ describe('UsersService', () => {
 
       const result = await service.verifyEmail(verifyEmailArgs);
 
-      expect(result).toEqual({ ok: false, error: 'Could not verify email' });
+      expect(result).toEqual({ ok: false, error: 'Failed to verify email' });
     });
   });
 });
