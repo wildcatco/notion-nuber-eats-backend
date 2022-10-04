@@ -6,6 +6,7 @@ import {
   PartialType,
   PickType,
 } from '@nestjs/graphql';
+import { IsNumber } from 'class-validator';
 import { BaseOutput } from 'src/common/dtos/base-output.dto';
 import { Dish } from './../entities/dish.entity';
 
@@ -17,6 +18,7 @@ export class EditDishInput extends PickType(PartialType(Dish), [
   'description',
 ]) {
   @Field((type) => Int)
+  @IsNumber()
   dishId: number;
 }
 

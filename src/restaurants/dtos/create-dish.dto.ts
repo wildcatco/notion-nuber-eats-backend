@@ -1,4 +1,5 @@
 import { Field, InputType, Int, ObjectType, PickType } from '@nestjs/graphql';
+import { IsNumber } from 'class-validator';
 import { BaseOutput } from 'src/common/dtos/base-output.dto';
 import { Dish } from '../entities/dish.entity';
 
@@ -10,6 +11,7 @@ export class CreateDishInput extends PickType(Dish, [
   'options',
 ]) {
   @Field((type) => Int)
+  @IsNumber()
   restaurantId: number;
 }
 
