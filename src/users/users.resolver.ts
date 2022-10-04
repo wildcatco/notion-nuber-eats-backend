@@ -37,7 +37,7 @@ export class UsersResolver {
   @Query((returns) => UserProfileOutput)
   @Roles('Any')
   userProfile(
-    @Args() userProfileInput: UserProfileInput,
+    @Args('input') userProfileInput: UserProfileInput,
   ): Promise<UserProfileOutput> {
     return this.usersService.findById(userProfileInput);
   }
