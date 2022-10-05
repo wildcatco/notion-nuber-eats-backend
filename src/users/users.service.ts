@@ -121,13 +121,16 @@ export class UsersService {
       where: { code },
       relations: ['user'],
     });
-    if (verification) {
-      await this.usersRepository.update(verification.user.id, {
-        verified: true,
-      });
-      await this.verificationsRepository.delete(verification.id);
-      return successResponse();
+
+    if (!verification) {
+      return errorResponse('Verification not found with given code');
     }
-    return errorResponse('Verification not found with given code');
+
+    await this.usersRepository.update(verification.user.id, {
+      verified: true,
+    });
+
+    await this.verificationsRepository.delete(verification.id);
+    return successResponse();
   }
 }
