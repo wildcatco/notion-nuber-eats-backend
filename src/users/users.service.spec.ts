@@ -233,8 +233,8 @@ describe('UsersService', () => {
       const newUser = {
         email: editProfileInput.email,
       };
-      usersRepository.findOneBy.mockResolvedValue(null);
-      usersRepository.save.mockResolvedValueOnce(newUser);
+      usersRepository.findOneBy.mockResolvedValueOnce(null);
+      usersRepository.findOneBy.mockResolvedValue(newUser);
       verificationsRepository.findOneBy.mockResolvedValue({
         id: verificationId,
       });
@@ -247,8 +247,7 @@ describe('UsersService', () => {
         password: undefined,
       });
 
-      expect(usersRepository.create).toBeCalledWith({
-        id: userId,
+      expect(usersRepository.update).toBeCalledWith(userId, {
         email: editProfileInput.email,
         verified: false,
       });

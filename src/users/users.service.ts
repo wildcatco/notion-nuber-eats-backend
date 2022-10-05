@@ -93,13 +93,12 @@ export class UsersService {
         return errorResponse('Email is already in use');
       }
 
-      const user = await this.usersRepository.save(
-        this.usersRepository.create({
-          id: userId,
-          email,
-          verified: false,
-        }),
-      );
+      await this.usersRepository.update(userId, {
+        email,
+        verified: false,
+      });
+
+      const user = await this.usersRepository.findOneBy({ id: userId });
 
       const verification = await this.verificationsRepository.findOneBy({
         user: { id: userId },
@@ -113,7 +112,7 @@ export class UsersService {
           user,
         }),
       );
-      this.mailService.sendVerificationEmail(user.email, newVerification.code);
+      this.mailService.sendVerificationEmail(email, newVerification.code);
     }
 
     if (password) {

@@ -1,5 +1,5 @@
 import { INestApplication } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from 'src/users/entities/user.entity';
 import * as request from 'supertest';
@@ -14,7 +14,7 @@ jest.mock('got', () => {
 });
 
 const GRAPHQL_ENDPOINT = '/graphql';
-const testUser = {
+const TEST_USER = {
   email: 'test@mail.com',
   password: '12345',
 };
@@ -25,19 +25,20 @@ describe('UserModule (e2e)', () => {
   let verificationsRepository: Repository<Verification>;
   let jwtToken: string;
 
-  const baseTest = () => request(app.getHttpServer()).post(GRAPHQL_ENDPOINT);
-  const publicTest = (query: string) => baseTest().send({ query });
-  const privateTest = (query: string, token: string) =>
-    baseTest().set('X-JWT', token).send({ query });
+  const baseRequest = () => request(app.getHttpServer()).post(GRAPHQL_ENDPOINT);
+  const publicRequest = (query: string) => baseRequest().send({ query });
+  const privateRequest = (query: string, token: string) =>
+    baseRequest().set('X-JWT', token).send({ query });
 
   beforeAll(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const module = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
     app = module.createNestApplication();
     usersRepository = module.get(getRepositoryToken(User));
     verificationsRepository = module.get(getRepositoryToken(Verification));
+
     await app.init();
   });
 
@@ -45,7 +46,7 @@ describe('UserModule (e2e)', () => {
     const dataSource = new DataSource({
       type: 'postgres',
       host: process.env.DB_HOST,
-      port: process.env.DB_PORT ? +process.env.DB_PORT : 5432,
+      port: +process.env.DB_PORT,
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
@@ -53,93 +54,92 @@ describe('UserModule (e2e)', () => {
     const connection = await dataSource.initialize();
     await connection.dropDatabase();
     await connection.destroy();
+
     app.close();
   });
 
   describe('createAccount', () => {
+    const createAccountQuery = `
+    mutation {
+      createAccount(input: {
+        email:"${TEST_USER.email}",
+        password: "${TEST_USER.password}",
+        role: Owner
+      }) {
+        ok
+        error
+      }
+    }
+    `;
+
     it('should create account', () => {
-      return publicTest(`
-        mutation {
-          createAccount(input: {
-            email:"${testUser.email}",
-            password: "${testUser.password}",
-            role: Owner
-          }) {
-            ok
-            error
-          }
-        }
-        `)
+      return publicRequest(createAccountQuery)
         .expect(200)
         .expect((res) => {
           const { ok, error } = res.body.data.createAccount;
+
           expect(ok).toBe(true);
           expect(error).toBeNull();
         });
     });
 
     it('should fail if account already exists', () => {
-      return publicTest(`
-        mutation {
-          createAccount(input: {
-            email:"${testUser.email}",
-            password: "${testUser.password}",
-            role: Owner
-          }) {
-            ok
-            error
-          }
-        }
-        `)
+      return publicRequest(createAccountQuery)
         .expect(200)
         .expect((res) => {
           const { ok, error } = res.body.data.createAccount;
           expect(ok).toBe(false);
-          expect(error).toBe('There is a user with that email already');
+          expect(error).toBe('Email is already in use');
         });
     });
   });
 
+  const loginQuery = (email: string, password: string): string => `
+    mutation {
+      login (input: {
+        email: "${email}",
+        password:"${password}"
+      }) {
+        ok
+        error
+        token
+      }
+    }
+    `;
+
   describe('login', () => {
-    it('should login with correct credentials', () => {
-      return publicTest(`
-        mutation {
-          login (input: {
-            email: "${testUser.email}",
-            password:"${testUser.password}"
-          }) {
-            ok
-            error
-            token
-          }
-        }
-        `)
+    it('should login with correct email and password', () => {
+      return publicRequest(loginQuery(TEST_USER.email, TEST_USER.password))
         .expect(200)
         .expect((res) => {
           const { ok, error, token } = res.body.data.login;
+
           expect(ok).toBe(true);
           expect(error).toBeNull();
           expect(token).toEqual(expect.any(String));
+
           jwtToken = token;
         });
     });
 
-    it('should not be able to login with wrong credentials', () => {
-      return publicTest(`
-        mutation {
-          login (input: {
-            email: "${testUser.email}",
-            password:"wrong-password"
-          }) {
-            ok
-            error
-            token
-          }
-        }
-        `)
+    it('should fail to login if email is wrong', () => {
+      return publicRequest(loginQuery('wrong@mail.com', TEST_USER.password))
         .expect(200)
         .expect((res) => {
           const { ok, error, token } = res.body.data.login;
+
+          expect(ok).toBe(false);
+          expect(error).toBe('User not found with given email');
+          expect(token).toBeNull();
+        });
+    });
+
+    it('should fail to login if password is wrong', () => {
+      return publicRequest(loginQuery(TEST_USER.email, 'wrongPassword'))
+        .expect(200)
+        .expect((res) => {
+          const { ok, error, token } = res.body.data.login;
+
           expect(ok).toBe(false);
           expect(error).toBe('Wrong password');
           expect(token).toBeNull();
@@ -148,142 +148,169 @@ describe('UserModule (e2e)', () => {
   });
 
   describe('userProfile', () => {
+    const userProfileQuery = (userId: number): string => `
+    {
+      userProfile(input: {
+        userId: ${userId}
+       }) {
+        ok
+        error
+        user {
+          id
+        }
+      }
+    }
+    `;
     let userId: number;
-
     beforeAll(async () => {
       const [user] = await usersRepository.find();
       userId = user.id;
     });
 
-    it("should see a user's profile", () => {
-      return privateTest(
-        `
-        {
-          userProfile(userId:${userId}) {
-            ok
-            error
-            user {
-              id
-            }
-          }
-        }
-        `,
-        jwtToken,
-      )
+    it("should find user's profile with given id", () => {
+      return privateRequest(userProfileQuery(userId), jwtToken)
         .expect(200)
         .expect((res) => {
           const { ok, error, user } = res.body.data.userProfile;
+
           expect(ok).toBe(true);
           expect(error).toBeNull();
           expect(user.id).toBe(userId);
         });
     });
 
-    it('should not find a profile', () => {
-      return privateTest(
-        `
-      {
-        userProfile(userId:777) {
-          ok
-          error
-          user {
-            id
-          }
-        }
-      }
-      `,
-        jwtToken,
-      )
+    it('should not find a profile with non-existing id', () => {
+      return privateRequest(userProfileQuery(999), jwtToken)
         .expect(200)
         .expect((res) => {
           const { ok, error, user } = res.body.data.userProfile;
+
           expect(ok).toBe(false);
-          expect(error).toBe('User Not Found');
+          expect(error).toBe('User not found with given id');
           expect(user).toBeNull();
+        });
+    });
+
+    it('should fail if not logged in', () => {
+      return publicRequest(userProfileQuery(userId))
+        .expect(200)
+        .expect((res) => {
+          const { message } = res.body.errors[0];
+          expect(message).toBe('Forbidden resource');
         });
     });
   });
 
   describe('me', () => {
-    it('should find my profile', () => {
-      return privateTest(
-        `
-      {
-        me {
-          email
-        }
+    const meQuery = `
+    {
+      me {
+        email
       }
-      `,
-        jwtToken,
-      )
+    }
+    `;
+
+    it("should find logged in user's profile", () => {
+      return privateRequest(meQuery, jwtToken)
         .expect(200)
         .expect((res) => {
           const { email } = res.body.data.me;
-          expect(email).toBe(testUser.email);
+          expect(email).toBe(TEST_USER.email);
         });
     });
 
-    it('should not allow logged out user', () => {
-      return publicTest(`
-      {
-        me {
-          email
-        }
-      }
-      `)
+    it('should fail if not logged in', () => {
+      return publicRequest(meQuery)
         .expect(200)
         .expect((res) => {
-          const [{ message }] = res.body.errors;
+          const { message } = res.body.errors[0];
           expect(message).toBe('Forbidden resource');
         });
     });
   });
 
   describe('editProfile', () => {
-    const NEW_EMAIL = 'new@mail.com';
+    const editProfileQuery = (email: string, password: string) => `
+    mutation {
+      editProfile(input: {
+        ${email ? `email: "${email}"` : ''}
+        ${password ? `password: "${password}"` : ''}
+      }) {
+        ok
+        error
+      }
+    }
+    `;
 
     it('should change email', () => {
-      return privateTest(
-        `
-      mutation {
-        editProfile(input: {
-          email: "${NEW_EMAIL}"
-        }) {
-          ok
-          error
-        }
-      }
-      `,
-        jwtToken,
-      )
+      return privateRequest(editProfileQuery('new@mail.com', null), jwtToken)
         .expect(200)
         .expect((res) => {
           const { ok, error } = res.body.data.editProfile;
+
           expect(ok).toBe(true);
           expect(error).toBeNull();
         });
     });
 
-    it('should have new email', () => {
-      return privateTest(
-        `
-      {
-        me {
-          email
-        }
-      }
-      `,
+    it('should change password', () => {
+      return privateRequest(editProfileQuery(null, 'newPassword'), jwtToken)
+        .expect(200)
+        .expect((res) => {
+          const { ok, error } = res.body.data.editProfile;
+
+          expect(ok).toBe(true);
+          expect(error).toBeNull();
+        });
+    });
+
+    it('should change both email and password', () => {
+      return privateRequest(
+        editProfileQuery('new2@mail.com', 'newPassword2'),
         jwtToken,
       )
         .expect(200)
         .expect((res) => {
-          const { email } = res.body.data.me;
-          expect(email).toBe(NEW_EMAIL);
+          const { ok, error } = res.body.data.editProfile;
+
+          expect(ok).toBe(true);
+          expect(error).toBeNull();
+        });
+    });
+
+    it('should login successfully with new email and password', () => {
+      return publicRequest(loginQuery('new2@mail.com', 'newPassword2'))
+        .expect(200)
+        .expect((res) => {
+          const { ok, error, token } = res.body.data.login;
+
+          expect(ok).toBe(true);
+          expect(error).toBeNull();
+          expect(token).toEqual(expect.any(String));
+        });
+    });
+
+    it('should fail if not logged in', () => {
+      return publicRequest(editProfileQuery('new3@mail.com', 'newPassword3'))
+        .expect(200)
+        .expect((res) => {
+          const { message } = res.body.errors[0];
+          expect(message).toBe('Forbidden resource');
         });
     });
   });
 
   describe('verifyEmail', () => {
+    const verifyEmailQuery = (code: string): string => `
+    mutation {
+      verifyEmail(input: {
+        code: "${code}"
+      }) {
+        ok
+        error
+      }
+    }
+    `;
     let verificationCode: string;
 
     beforeAll(async () => {
@@ -292,38 +319,22 @@ describe('UserModule (e2e)', () => {
     });
 
     it('should fail on wrong verification code', () => {
-      return publicTest(`
-        mutation {
-          verifyEmail(input: {
-            code: "wrong-code"
-          }) {
-            ok
-            error
-          }
-        }
-        `)
+      return publicRequest(verifyEmailQuery('wrong-code'))
         .expect(200)
         .expect((res) => {
           const { ok, error } = res.body.data.verifyEmail;
+
           expect(ok).toBe(false);
-          expect(error).toBe('Verification not found');
+          expect(error).toBe('Verification not found with given code');
         });
     });
 
     it('should verify email', () => {
-      return publicTest(`
-      mutation {
-        verifyEmail(input: {
-          code: "${verificationCode}"
-        }) {
-          ok
-          error
-        }
-      }
-      `)
+      return publicRequest(verifyEmailQuery(verificationCode))
         .expect(200)
         .expect((res) => {
           const { ok, error } = res.body.data.verifyEmail;
+
           expect(ok).toBe(true);
           expect(error).toBeNull();
         });
