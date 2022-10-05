@@ -21,7 +21,7 @@ export enum OrderStatus {
 
 registerEnumType(OrderStatus, { name: 'OrderStatus' });
 
-@InputType('OrderInputType', { isAbstract: true })
+@InputType({ isAbstract: true })
 @ObjectType()
 @Entity()
 export class Order extends BaseEntity {
@@ -30,7 +30,7 @@ export class Order extends BaseEntity {
     onDelete: 'SET NULL',
     nullable: true,
   })
-  customer?: User;
+  customer: User;
 
   @Field((type) => User, { nullable: true })
   @ManyToOne((type) => User, (user) => user.rides, { onDelete: 'SET NULL' })
@@ -39,7 +39,6 @@ export class Order extends BaseEntity {
   @Field((type) => Restaurant, { nullable: true })
   @ManyToOne((type) => Restaurant, (restaurant) => restaurant.orders, {
     onDelete: 'SET NULL',
-    nullable: true,
   })
   restaurant?: Restaurant;
 
@@ -49,7 +48,7 @@ export class Order extends BaseEntity {
   dishes: Dish[];
 
   @Field((type) => Float)
-  @Column()
+  @Column({ type: 'float' })
   @IsNumber()
   total: number;
 
