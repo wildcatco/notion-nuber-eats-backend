@@ -7,21 +7,27 @@ import { ILike, Repository } from 'typeorm';
 import {
   CreateRestaurantInput,
   CreateRestaurantOutput,
-} from '../dtos/create-restaurant.dto';
+} from '../dtos/restaurants/create-restaurant.dto';
 import {
   DeleteRestaurantInput,
   DeleteRestaurantOutput,
-} from '../dtos/delete-restaurant.dto';
+} from '../dtos/restaurants/delete-restaurant.dto';
 import {
   EditRestaurantInput,
   EditRestaurantOutput,
-} from '../dtos/edit-restaurant.dto';
-import { RestaurantInput, RestaurantOutput } from '../dtos/restaurant.dto';
-import { RestaurantsInput, RestaurantsOutput } from '../dtos/restaurants.dto';
+} from '../dtos/restaurants/edit-restaurant.dto';
+import {
+  RestaurantInput,
+  RestaurantOutput,
+} from '../dtos/restaurants/restaurant.dto';
+import {
+  RestaurantsInput,
+  RestaurantsOutput,
+} from '../dtos/restaurants/restaurants.dto';
 import {
   SearchRestaurantInput,
   SearchRestaurantOutput,
-} from '../dtos/search-restaurant.dto';
+} from '../dtos/restaurants/search-restaurant.dto';
 import { Category } from '../entities/category.entity';
 import { Restaurant } from '../entities/restaurant.entity';
 import { CategoryRepository } from '../repositories/category.repository';

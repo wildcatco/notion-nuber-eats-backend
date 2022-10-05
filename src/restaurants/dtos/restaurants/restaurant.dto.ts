@@ -1,7 +1,7 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { IsNumber } from 'class-validator';
 import { BaseOutput } from 'src/common/dtos/base-output.dto';
-import { Restaurant } from '../entities/restaurant.entity';
+import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
 
 @InputType()
 export class RestaurantInput {

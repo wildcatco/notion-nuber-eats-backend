@@ -6,8 +6,8 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AllCategoriesOutput } from '../dtos/all-categories.dto';
-import { CategoryInput, CategoryOutput } from '../dtos/category.dto';
+import { AllCategoriesOutput } from '../dtos/categories/all-categories.dto';
+import { CategoryInput, CategoryOutput } from '../dtos/categories/category.dto';
 import { Category } from '../entities/category.entity';
 import { CategoriesService } from '../services/categories.service';
 

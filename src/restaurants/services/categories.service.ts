@@ -3,9 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CatchError } from 'src/common/common.decorators';
 import { errorResponse, successResponse } from 'src/common/common.helpers';
 import { Repository } from 'typeorm';
-import { AllCategoriesOutput } from '../dtos/all-categories.dto';
-import { CategoryInput, CategoryOutput } from '../dtos/category.dto';
-import { RestaurantInput, RestaurantOutput } from '../dtos/restaurant.dto';
+import { AllCategoriesOutput } from '../dtos/categories/all-categories.dto';
+import { CategoryInput, CategoryOutput } from '../dtos/categories/category.dto';
 import { Category } from '../entities/category.entity';
 import { Restaurant } from '../entities/restaurant.entity';
 import { CategoryRepository } from '../repositories/category.repository';
@@ -56,19 +55,5 @@ export class CategoriesService {
       category,
       restaurants,
     });
-  }
-
-  @CatchError('Failed to load restaurant')
-  async findRestaurantById({
-    restaurantId,
-  }: RestaurantInput): Promise<RestaurantOutput> {
-    const restaurant = await this.restaurantsRepository.findOne({
-      where: { id: restaurantId },
-      relations: ['menu'],
-    });
-    if (!restaurant) {
-      return errorResponse('Restaurant not found with given id');
-    }
-    return successResponse<RestaurantOutput>({ restaurant });
   }
 }

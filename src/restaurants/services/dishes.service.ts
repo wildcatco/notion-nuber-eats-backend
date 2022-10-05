@@ -4,9 +4,15 @@ import { CatchError } from 'src/common/common.decorators';
 import { errorResponse, successResponse } from 'src/common/common.helpers';
 import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
-import { CreateDishInput, CreateDishOutput } from '../dtos/create-dish.dto';
-import { DeleteDishInput, DeleteDishOutput } from '../dtos/delete-dish.dto';
-import { EditDishInput, EditDishOutput } from '../dtos/edit-dish.dto';
+import {
+  CreateDishInput,
+  CreateDishOutput,
+} from '../dtos/dishes/create-dish.dto';
+import {
+  DeleteDishInput,
+  DeleteDishOutput,
+} from '../dtos/dishes/delete-dish.dto';
+import { EditDishInput, EditDishOutput } from '../dtos/dishes/edit-dish.dto';
 import { Dish } from '../entities/dish.entity';
 import { Restaurant } from '../entities/restaurant.entity';
 

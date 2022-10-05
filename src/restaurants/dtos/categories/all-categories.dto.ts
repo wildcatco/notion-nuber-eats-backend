@@ -1,6 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { BaseOutput } from 'src/common/dtos/base-output.dto';
-import { Category } from './../entities/category.entity';
+import { Category } from '../../entities/category.entity';
 
 @ObjectType()
 export class AllCategoriesOutput extends BaseOutput {

@@ -2,9 +2,15 @@ import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { AuthUser } from 'src/auth/auth-user.decorator';
 import { Roles } from 'src/auth/roles.decorator';
 import { User } from 'src/users/entities/user.entity';
-import { CreateDishInput, CreateDishOutput } from '../dtos/create-dish.dto';
-import { DeleteDishInput, DeleteDishOutput } from '../dtos/delete-dish.dto';
-import { EditDishInput, EditDishOutput } from '../dtos/edit-dish.dto';
+import {
+  CreateDishInput,
+  CreateDishOutput,
+} from '../dtos/dishes/create-dish.dto';
+import {
+  DeleteDishInput,
+  DeleteDishOutput,
+} from '../dtos/dishes/delete-dish.dto';
+import { EditDishInput, EditDishOutput } from '../dtos/dishes/edit-dish.dto';
 import { Dish } from '../entities/dish.entity';
 import { DishesService } from '../services/dishes.service';
 
