@@ -49,12 +49,33 @@ export class RestaurantsService {
       createRestaurantInput,
     );
     newRestaurant.owner = owner;
+
     const category = await this.categoriesRepository.getOrCreate(
       createRestaurantInput.categoryName,
     );
     newRestaurant.category = category;
+
     await this.restaurantsRepository.save(newRestaurant);
+
     return successResponse();
+  }
+
+  async checkOwner(
+    restaurantId: number,
+    ownerId: number,
+    toDo: 'edit' | 'delete',
+  ) {
+    const restaurant = await this.restaurantsRepository.findOneBy({
+      id: restaurantId,
+    });
+
+    if (!restaurant) {
+      return 'Restaurant not found with given id';
+    }
+
+    if (ownerId !== restaurant.ownerId) {
+      return `Only owner can ${toDo} restaurant`;
+    }
   }
 
   @CatchError('Failed to edit restaurant')
@@ -68,15 +89,11 @@ export class RestaurantsService {
       name,
     }: EditRestaurantInput,
   ): Promise<EditRestaurantOutput> {
-    const restaurant = await this.restaurantsRepository.findOneBy({
-      id: restaurantId,
-    });
-    if (!restaurant) {
-      return errorResponse('Restaurant not found with given id');
+    const error = await this.checkOwner(restaurantId, owner.id, 'edit');
+    if (error) {
+      return errorResponse(error);
     }
-    if (owner.id !== restaurant.ownerId) {
-      return errorResponse('Only owner can edit restaurant');
-    }
+
     let category: Category = null;
     if (categoryName) {
       category = await this.categoriesRepository.getOrCreate(categoryName);
@@ -90,6 +107,7 @@ export class RestaurantsService {
         category,
       }),
     );
+
     return successResponse();
   }
 
@@ -98,28 +116,28 @@ export class RestaurantsService {
     owner: User,
     { restaurantId }: DeleteRestaurantInput,
   ): Promise<DeleteRestaurantOutput> {
-    const restaurant = await this.restaurantsRepository.findOneBy({
-      id: restaurantId,
-    });
-    if (!restaurant) {
-      return errorResponse('Restaurant not found with given id');
+    const error = await this.checkOwner(restaurantId, owner.id, 'edit');
+    if (error) {
+      return errorResponse(error);
     }
-    if (owner.id !== restaurant.ownerId) {
-      return errorResponse('Only owner can delete restaurant');
-    }
+
     await this.restaurantsRepository.delete(restaurantId);
     return successResponse();
   }
 
   @CatchError('Failed to load restaurants')
-  async allRestaurants({ page }: RestaurantsInput): Promise<RestaurantsOutput> {
+  async allRestaurants({
+    page,
+    offset,
+  }: RestaurantsInput): Promise<RestaurantsOutput> {
     const [restaurants, totalResults] =
       await this.restaurantsRepository.findAndCount({
-        take: 25,
-        skip: (page - 1) * 25,
+        take: offset,
+        skip: (page - 1) * offset,
       });
+
     return successResponse<RestaurantsOutput>({
-      totalPages: Math.ceil(totalResults / 25),
+      totalPages: Math.ceil(totalResults / offset),
       totalResults,
       results: restaurants,
     });
@@ -133,9 +151,11 @@ export class RestaurantsService {
       where: { id: restaurantId },
       relations: ['menu'],
     });
+
     if (!restaurant) {
       return errorResponse('Restaurant not found with given id');
     }
+
     return successResponse<RestaurantOutput>({ restaurant });
   }
 
@@ -143,20 +163,21 @@ export class RestaurantsService {
   async searchRestaurantByName({
     query,
     page,
+    offset,
   }: SearchRestaurantInput): Promise<SearchRestaurantOutput> {
     const [restaurants, totalResults] =
       await this.restaurantsRepository.findAndCount({
         where: {
           name: ILike(`%${query}%`),
-          // name: Raw((name) => `${name} ILIKE '%${query}%'`),
         },
-        take: 25,
-        skip: (page - 1) * 25,
+        take: offset,
+        skip: (page - 1) * offset,
       });
+
     return successResponse<SearchRestaurantOutput>({
       restaurants,
       totalResults,
-      totalPages: Math.ceil(totalResults / 25),
+      totalPages: Math.ceil(totalResults / offset),
     });
   }
 }

@@ -33,6 +33,7 @@ export class CategoriesService {
   async findCategoryBySlug({
     slug,
     page,
+    offset,
   }: CategoryInput): Promise<CategoryOutput> {
     const category = await this.categoriesRepository.findOne({
       where: { slug },
@@ -41,17 +42,16 @@ export class CategoriesService {
     if (!category) {
       return errorResponse('Category not found with given slug');
     }
-    const restaurants = await this.restaurantsRepository.find({
-      where: {
-        category: { id: category.id },
-      },
-      take: 25,
-      skip: (page - 1) * 25,
-    });
-    category.restaurants = restaurants;
-    const totalResults = await this.countRestaurantsWithCategory(category);
+
+    const restaurants = category.restaurants.slice(
+      (page - 1) * offset,
+      page * offset,
+    );
+
+    const totalResults = category.restaurants.length;
     return successResponse<CategoryOutput>({
-      totalPages: Math.ceil(totalResults / 25),
+      totalResults,
+      totalPages: Math.ceil(totalResults / offset),
       category,
       restaurants,
     });

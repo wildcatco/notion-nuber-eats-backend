@@ -28,20 +28,26 @@ export class DishesService {
   @CatchError('Failed to create dish')
   async createDish(
     owner: User,
-    createDishInput: CreateDishInput,
+    { restaurantId, name, description, price, options }: CreateDishInput,
   ): Promise<CreateDishOutput> {
     const restaurant = await this.restaurantsRepository.findOneBy({
-      id: createDishInput.restaurantId,
+      id: restaurantId,
     });
+
     if (!restaurant) {
       return errorResponse('Restaurant not found with given id');
     }
+
     if (owner.id !== restaurant.ownerId) {
       return errorResponse('Only owner can add menu');
     }
+
     await this.dishesRepository.save(
       this.dishesRepository.create({
-        ...createDishInput,
+        name,
+        description,
+        price,
+        options,
         restaurant,
       }),
     );
@@ -49,41 +55,40 @@ export class DishesService {
   }
 
   async checkDish(dishId: number, ownerId: number, toDo: 'edit' | 'delete') {
-    const error = { notFound: false, notOwner: false };
     const dish = await this.dishesRepository.findOne({
       where: { id: dishId },
       relations: ['restaurant'],
     });
+
     if (!dish) {
-      error.notFound = true;
-      return error;
-      // return errorResponse('Dish not found with given id');
+      return 'Dish not found with given id';
     }
+
     if (ownerId !== dish.restaurant.ownerId) {
-      error.notOwner = true;
-      // return errorResponse(`Only owner can ${toDo} dish`);
+      return `Only owner can ${toDo} dish`;
     }
   }
 
   @CatchError('Failed to edit dish')
   async editDish(
     owner: User,
-    editDishInput: EditDishInput,
+    { dishId, name, description, price, options }: EditDishInput,
   ): Promise<EditDishOutput> {
-    const error = await this.checkDish(editDishInput.dishId, owner.id, 'edit');
-    if (error.notFound) {
-      return errorResponse('Dish not found with given id');
-    }
-    if (error.notOwner) {
-      return errorResponse('Only owner can edit dish');
+    const error = await this.checkDish(dishId, owner.id, 'edit');
+    if (error) {
+      return errorResponse(error);
     }
 
     await this.dishesRepository.save(
       this.dishesRepository.create({
-        id: editDishInput.dishId,
-        ...editDishInput,
+        id: dishId,
+        name,
+        description,
+        price,
+        options,
       }),
     );
+
     return successResponse();
   }
 
@@ -93,14 +98,12 @@ export class DishesService {
     { dishId }: DeleteDishInput,
   ): Promise<DeleteDishOutput> {
     const error = await this.checkDish(dishId, owner.id, 'delete');
-    if (error.notFound) {
-      return errorResponse('Dish not found with given id');
-    }
-    if (error.notOwner) {
-      return errorResponse('Only owner can delete dish');
+    if (error) {
+      return errorResponse(error);
     }
 
     await this.dishesRepository.delete(dishId);
+
     return successResponse();
   }
 }
