@@ -21,27 +21,27 @@ export class DishesResolver {
   @Mutation((returns) => CreateDishOutput)
   @Roles('Owner')
   createDish(
-    @AuthUser() owner: User,
+    @AuthUser() authUser: User,
     @Args('input') createDishInput: CreateDishInput,
   ): Promise<CreateDishOutput> {
-    return this.dishesService.createDish(owner, createDishInput);
+    return this.dishesService.createDish(authUser, createDishInput);
   }
 
   @Mutation((returns) => EditDishOutput)
   @Roles('Owner')
   editDish(
-    @AuthUser() owner: User,
+    @AuthUser() authUser: User,
     @Args('input') editDishInput: EditDishInput,
   ): Promise<EditDishOutput> {
-    return this.dishesService.editDish(owner, editDishInput);
+    return this.dishesService.editDish(authUser, editDishInput);
   }
 
   @Mutation((returns) => DeleteDishOutput)
   @Roles('Owner')
   deleteDish(
-    @AuthUser() owner: User,
+    @AuthUser() authUser: User,
     @Args('input') deleteDishInput: DeleteDishInput,
   ): Promise<EditDishOutput> {
-    return this.dishesService.deleteDish(owner, deleteDishInput);
+    return this.dishesService.deleteDish(authUser, deleteDishInput);
   }
 }
