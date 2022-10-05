@@ -7,6 +7,10 @@ export class PaginationInput {
   @Field((type) => Int, { defaultValue: 1 })
   @IsNumber()
   page: number;
+
+  @Field((type) => Int, { defaultValue: 25 })
+  @IsNumber()
+  offset: number;
 }
 
 @ObjectType()

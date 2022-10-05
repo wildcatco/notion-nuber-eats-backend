@@ -6,7 +6,7 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { AllCategoriesOutput } from '../dtos/categories/all-categories.dto';
+import { CategoriesOutput } from '../dtos/categories/categories.dto';
 import { CategoryInput, CategoryOutput } from '../dtos/categories/category.dto';
 import { Category } from '../entities/category.entity';
 import { CategoriesService } from '../services/categories.service';
@@ -16,12 +16,12 @@ export class CategoriesResolver {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @ResolveField((type) => Int)
-  restaurantCount(@Parent() category: Category): Promise<number> {
+  countRestaurants(@Parent() category: Category): Promise<number> {
     return this.categoriesService.countRestaurantsWithCategory(category);
   }
 
-  @Query((type) => AllCategoriesOutput)
-  async allCategories(): Promise<AllCategoriesOutput> {
+  @Query((type) => CategoriesOutput)
+  async categories(): Promise<CategoriesOutput> {
     return this.categoriesService.allCategories();
   }
 

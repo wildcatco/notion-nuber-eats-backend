@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CatchError } from 'src/common/common.decorators';
 import { errorResponse, successResponse } from 'src/common/common.helpers';
 import { Repository } from 'typeorm';
-import { AllCategoriesOutput } from '../dtos/categories/all-categories.dto';
+import { CategoriesOutput } from '../dtos/categories/categories.dto';
 import { CategoryInput, CategoryOutput } from '../dtos/categories/category.dto';
 import { Category } from '../entities/category.entity';
 import { Restaurant } from '../entities/restaurant.entity';
@@ -18,9 +18,9 @@ export class CategoriesService {
   ) {}
 
   @CatchError('Failed to load categories')
-  async allCategories(): Promise<AllCategoriesOutput> {
+  async allCategories(): Promise<CategoriesOutput> {
     const categories = await this.categoriesRepository.find();
-    return successResponse<AllCategoriesOutput>({ categories });
+    return successResponse<CategoriesOutput>({ categories });
   }
 
   countRestaurantsWithCategory(category: Category): Promise<number> {
