@@ -100,8 +100,8 @@ describe('UsersService', () => {
 
       const result = await usersService.createAccount(createAccountInput);
 
-      expect(usersRepository.save).toBeCalledWith(createAccountInput);
-      expect(verificationsRepository.save).toBeCalledWith({
+      expect(usersRepository.create).toBeCalledWith(createAccountInput);
+      expect(verificationsRepository.create).toBeCalledWith({
         user: createAccountInput,
       });
       expect(mailService.sendVerificationEmail).toBeCalledWith(
@@ -247,7 +247,7 @@ describe('UsersService', () => {
         password: undefined,
       });
 
-      expect(usersRepository.save).toBeCalledWith({
+      expect(usersRepository.create).toBeCalledWith({
         id: userId,
         email: editProfileInput.email,
         verified: false,
@@ -256,7 +256,7 @@ describe('UsersService', () => {
         user: { id: userId },
       });
       expect(verificationsRepository.delete).toBeCalledWith(verificationId);
-      expect(verificationsRepository.save).toBeCalledWith({ user: newUser });
+      expect(verificationsRepository.create).toBeCalledWith({ user: newUser });
       expect(mailService.sendVerificationEmail).toBeCalledWith(
         newUser.email,
         verificationCode,

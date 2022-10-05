@@ -83,13 +83,15 @@ export class RestaurantsService {
     if (categoryName) {
       category = await this.categoriesRepository.getOrCreate(categoryName);
     }
-    await this.restaurantsRepository.save({
-      id: restaurantId,
-      name,
-      coverImg,
-      address,
-      category,
-    });
+    await this.restaurantsRepository.save(
+      this.restaurantsRepository.create({
+        id: restaurantId,
+        name,
+        coverImg,
+        address,
+        category,
+      }),
+    );
     return successResponse();
   }
 
@@ -214,10 +216,12 @@ export class RestaurantsService {
     if (owner.id !== restaurant.ownerId) {
       return errorResponse('Only owner can add menu');
     }
-    await this.dishesRepository.save({
-      ...createDishInput,
-      restaurant,
-    });
+    await this.dishesRepository.save(
+      this.dishesRepository.create({
+        ...createDishInput,
+        restaurant,
+      }),
+    );
     return successResponse();
   }
 
@@ -251,12 +255,12 @@ export class RestaurantsService {
       return errorResponse('Only owner can edit dish');
     }
 
-    await this.dishesRepository.save([
-      {
+    await this.dishesRepository.save(
+      this.dishesRepository.create({
         id: editDishInput.dishId,
         ...editDishInput,
-      },
-    ]);
+      }),
+    );
     return successResponse();
   }
 

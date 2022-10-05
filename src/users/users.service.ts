@@ -19,7 +19,8 @@ import { Verification } from './entities/verification.entity';
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(User) private readonly usersRepository: Repository<User>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
     @InjectRepository(Verification)
     private readonly verificationsRepository: Repository<Verification>,
     private readonly jwtService: JwtService,
@@ -37,15 +38,19 @@ export class UsersService {
       return errorResponse('Email is already in use');
     }
 
-    const user = await this.usersRepository.save({
-      email,
-      password,
-      role,
-    });
+    const user = await this.usersRepository.save(
+      this.usersRepository.create({
+        email,
+        password,
+        role,
+      }),
+    );
 
-    const verification = await this.verificationsRepository.save({
-      user,
-    });
+    const verification = await this.verificationsRepository.save(
+      this.verificationsRepository.create({
+        user,
+      }),
+    );
 
     this.mailService.sendVerificationEmail(user.email, verification.code);
 
@@ -88,11 +93,13 @@ export class UsersService {
         return errorResponse('Email is already in use');
       }
 
-      const user = await this.usersRepository.save({
-        id: userId,
-        email,
-        verified: false,
-      });
+      const user = await this.usersRepository.save(
+        this.usersRepository.create({
+          id: userId,
+          email,
+          verified: false,
+        }),
+      );
 
       const verification = await this.verificationsRepository.findOneBy({
         user: { id: userId },
@@ -101,9 +108,11 @@ export class UsersService {
         await this.verificationsRepository.delete(verification.id);
       }
 
-      const newVerification = await this.verificationsRepository.save({
-        user,
-      });
+      const newVerification = await this.verificationsRepository.save(
+        this.verificationsRepository.create({
+          user,
+        }),
+      );
       this.mailService.sendVerificationEmail(user.email, newVerification.code);
     }
 
