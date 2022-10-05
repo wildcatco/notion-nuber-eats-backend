@@ -10,7 +10,7 @@ jest.mock('form-data');
 const TEST_DOMAIN = 'test-domain';
 
 describe('MailService', () => {
-  let service: MailService;
+  let mailService: MailService;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -27,42 +27,20 @@ describe('MailService', () => {
       ],
     }).compile();
 
-    service = module.get<MailService>(MailService);
+    mailService = module.get<MailService>(MailService);
   });
 
   it('be defined', () => {
-    expect(service).toBeDefined();
-  });
-
-  describe('sendVerificationEmail', () => {
-    it('should call sendEmail', () => {
-      const sendVerificationEmailArgs = {
-        email: 'email',
-        code: 'code',
-      };
-      jest.spyOn(service, 'sendEmail').mockImplementation(async () => true);
-      service.sendVerificationEmail(
-        sendVerificationEmailArgs.email,
-        sendVerificationEmailArgs.code,
-      );
-
-      expect(service.sendEmail).toBeCalledTimes(1);
-      expect(service.sendEmail).toBeCalledWith(
-        'Verify Your Email',
-        'nuber-eats-confirm',
-        [
-          { key: 'username', value: sendVerificationEmailArgs.email },
-          { key: 'code', value: sendVerificationEmailArgs.code },
-        ],
-      );
-    });
+    expect(mailService).toBeDefined();
   });
 
   describe('sendEmail', () => {
     it('sends email', async () => {
       const formSpy = jest.spyOn(FormData.prototype, 'append');
 
-      const ok = await service.sendEmail('', '', [{ key: 'one', value: '1' }]);
+      const ok = await mailService.sendEmail('', '', [
+        { key: 'one', value: '1' },
+      ]);
 
       expect(formSpy).toBeCalled();
       expect(got.post).toBeCalledTimes(1);
@@ -78,9 +56,37 @@ describe('MailService', () => {
         throw new Error();
       });
 
-      const ok = await service.sendEmail('', '', [{ key: 'one', value: '1' }]);
+      const ok = await mailService.sendEmail('', '', [
+        { key: 'one', value: '1' },
+      ]);
 
       expect(ok).toBeFalsy();
+    });
+  });
+
+  describe('sendVerificationEmail', () => {
+    it('should call sendEmail', () => {
+      const sendVerificationEmailInput = {
+        email: 'email',
+        code: 'code',
+      };
+
+      jest.spyOn(mailService, 'sendEmail').mockImplementation(async () => true);
+
+      mailService.sendVerificationEmail(
+        sendVerificationEmailInput.email,
+        sendVerificationEmailInput.code,
+      );
+
+      expect(mailService.sendEmail).toBeCalledTimes(1);
+      expect(mailService.sendEmail).toBeCalledWith(
+        'Verify Your Email',
+        'nuber-eats-confirm',
+        [
+          { key: 'username', value: sendVerificationEmailInput.email },
+          { key: 'code', value: sendVerificationEmailInput.code },
+        ],
+      );
     });
   });
 });

@@ -45,7 +45,7 @@ export class Order extends BaseEntity {
 
   @Field((type) => [Dish])
   @ManyToMany((type) => Dish)
-  @JoinTable()
+  @JoinTable({ name: 'order_dish' })
   dishes: Dish[];
 
   @Field((type) => Float)

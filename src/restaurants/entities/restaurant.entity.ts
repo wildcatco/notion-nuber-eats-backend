@@ -7,12 +7,12 @@ import { Column, Entity, ManyToOne, OneToMany, RelationId } from 'typeorm';
 import { Category } from './category.entity';
 import { Dish } from './dish.entity';
 
-@InputType('RestaurantInputType', { isAbstract: true })
+@InputType({ isAbstract: true })
 @ObjectType()
 @Entity()
 export class Restaurant extends BaseEntity {
   @Field((type) => String)
-  @Column()
+  @Column({ unique: true })
   @IsString()
   @Length(5)
   name: string;
@@ -23,13 +23,12 @@ export class Restaurant extends BaseEntity {
   coverImg: string;
 
   @Field((type) => String)
-  @Column()
+  @Column({ unique: true })
   @IsString()
   address: string;
 
   @Field((type) => Category)
   @ManyToOne((type) => Category, (category) => category.restaurants, {
-    nullable: true,
     onDelete: 'SET NULL',
   })
   category: Category;
