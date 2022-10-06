@@ -1,6 +1,6 @@
 import { Field, InputType, ObjectType, PickType } from '@nestjs/graphql';
 import { IsString } from 'class-validator';
-import { BaseOutput } from '../../../common/dtos/base-output.dto';
+import { CoreOutput } from '../../../common/dtos/core-output.dto';
 import { Restaurant } from '../../entities/restaurant.entity';
 
 @InputType()
@@ -15,4 +15,4 @@ export class CreateRestaurantInput extends PickType(Restaurant, [
 }
 
 @ObjectType()
-export class CreateRestaurantOutput extends BaseOutput {}
+export class CreateRestaurantOutput extends CoreOutput {}

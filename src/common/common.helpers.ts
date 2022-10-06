@@ -1,6 +1,6 @@
-import { BaseOutput } from './dtos/base-output.dto';
+import { CoreOutput } from './dtos/core-output.dto';
 
-export const successResponse = <T>(data?: Omit<T, keyof BaseOutput>) => ({
+export const successResponse = <T>(data?: Omit<T, keyof CoreOutput>) => ({
   ok: true,
   ...(data && data),
 });

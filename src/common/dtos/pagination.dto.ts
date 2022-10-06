@@ -1,6 +1,6 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { IsNumber } from 'class-validator';
-import { BaseOutput } from './base-output.dto';
+import { CoreOutput } from './core-output.dto';
 
 @InputType()
 export class PaginationInput {
@@ -14,7 +14,7 @@ export class PaginationInput {
 }
 
 @ObjectType()
-export class PaginationOutput extends BaseOutput {
+export class PaginationOutput extends CoreOutput {
   @Field((type) => Int, { nullable: true })
   totalPages?: number;
 

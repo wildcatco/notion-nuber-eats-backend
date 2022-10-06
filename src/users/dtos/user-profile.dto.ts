@@ -1,6 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { IsNumber } from 'class-validator';
-import { BaseOutput } from '../../common/dtos/base-output.dto';
+import { CoreOutput } from '../../common/dtos/core-output.dto';
 import { User } from '../entities/user.entity';
 
 @InputType()
@@ -11,7 +11,7 @@ export class UserProfileInput {
 }
 
 @ObjectType()
-export class UserProfileOutput extends BaseOutput {
+export class UserProfileOutput extends CoreOutput {
   @Field((type) => User, { nullable: true })
   user?: User;
 }

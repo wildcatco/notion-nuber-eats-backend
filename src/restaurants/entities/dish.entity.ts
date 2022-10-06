@@ -1,12 +1,12 @@
 import { Field, Float, InputType, ObjectType } from '@nestjs/graphql';
-import { IsNumber, IsString, Length } from 'class-validator';
-import { BaseEntity } from 'src/common/entities/base.entity';
+import { IsArray, IsNumber, IsString, Length } from 'class-validator';
+import { CoreEntity } from 'src/common/entities/base.entity';
 import { Column, Entity, ManyToOne, RelationId } from 'typeorm';
 import { Restaurant } from './restaurant.entity';
 
 @InputType('DishOptionChoiceInputType', { isAbstract: true })
 @ObjectType()
-class DishOptionChoice {
+export class DishOptionChoice {
   @Field((type) => String)
   name: string;
 
@@ -16,7 +16,7 @@ class DishOptionChoice {
 
 @InputType('DishOptionInputType', { isAbstract: true })
 @ObjectType()
-class DishOption {
+export class DishOption {
   @Field((type) => String)
   name: string;
 
@@ -27,10 +27,10 @@ class DishOption {
   extra?: number;
 }
 
-@InputType({ isAbstract: true })
+@InputType('DishInputType', { isAbstract: true })
 @ObjectType()
 @Entity()
-export class Dish extends BaseEntity {
+export class Dish extends CoreEntity {
   @Field((type) => String)
   @Column()
   @IsString()
@@ -38,7 +38,7 @@ export class Dish extends BaseEntity {
   name: string;
 
   @Field((type) => Float)
-  @Column()
+  @Column({ type: 'float' })
   @IsNumber()
   price: number;
 
@@ -65,5 +65,6 @@ export class Dish extends BaseEntity {
 
   @Field((type) => [DishOption], { nullable: true })
   @Column({ type: 'json', nullable: true })
+  @IsArray()
   options?: DishOption[];
 }

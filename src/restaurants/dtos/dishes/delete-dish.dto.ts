@@ -1,6 +1,6 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { IsNumber } from 'class-validator';
-import { BaseOutput } from 'src/common/dtos/base-output.dto';
+import { CoreOutput } from 'src/common/dtos/core-output.dto';
 
 @InputType()
 export class DeleteDishInput {
@@ -10,4 +10,4 @@ export class DeleteDishInput {
 }
 
 @ObjectType()
-export class DeleteDishOutput extends BaseOutput {}
+export class DeleteDishOutput extends CoreOutput {}

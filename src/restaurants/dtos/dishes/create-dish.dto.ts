@@ -1,6 +1,6 @@
 import { Field, InputType, Int, ObjectType, PickType } from '@nestjs/graphql';
 import { IsNumber } from 'class-validator';
-import { BaseOutput } from 'src/common/dtos/base-output.dto';
+import { CoreOutput } from 'src/common/dtos/core-output.dto';
 import { Dish } from '../../entities/dish.entity';
 
 @InputType()
@@ -16,4 +16,4 @@ export class CreateDishInput extends PickType(Dish, [
 }
 
 @ObjectType()
-export class CreateDishOutput extends BaseOutput {}
+export class CreateDishOutput extends CoreOutput {}
