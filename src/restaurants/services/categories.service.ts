@@ -5,6 +5,7 @@ import { errorResponse, successResponse } from 'src/common/common.helpers';
 import { Repository } from 'typeorm';
 import { CategoriesOutput } from '../dtos/categories/categories.dto';
 import { CategoryInput, CategoryOutput } from '../dtos/categories/category.dto';
+import { Category } from '../entities/category.entity';
 import { Restaurant } from '../entities/restaurant.entity';
 import { CategoryRepository } from '../repositories/category.repository';
 
@@ -20,6 +21,12 @@ export class CategoriesService {
   async allCategories(): Promise<CategoriesOutput> {
     const categories = await this.categoriesRepository.find();
     return successResponse<CategoriesOutput>({ categories });
+  }
+
+  countRestaurantsWithCategory(category: Category): Promise<number> {
+    return this.restaurantsRepository.count({
+      where: { category: { id: category.id } },
+    });
   }
 
   @CatchError('Failed to find category')

@@ -14,6 +14,7 @@ const mockRepository = () => ({
   create: jest.fn(),
   update: jest.fn(),
   delete: jest.fn(),
+  count: jest.fn(),
 });
 
 type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
@@ -69,6 +70,20 @@ describe('CategoriesService', () => {
       expect(result).toEqual({
         ok: false,
         error: 'Failed to load categories',
+      });
+    });
+  });
+
+  describe('countRestaurantWithCategory', () => {
+    const category = {
+      id: 10,
+    } as Category;
+
+    it('should count restaurants with category', async () => {
+      await categoriesService.countRestaurantsWithCategory(category);
+
+      expect(restaurantsRepository.count).toBeCalledWith({
+        where: { category: { id: category.id } },
       });
     });
   });
