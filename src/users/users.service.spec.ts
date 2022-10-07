@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { MailService } from 'src/mail/mail.service';
@@ -8,8 +9,10 @@ import { User, UserRole } from './entities/user.entity';
 import { Verification } from './entities/verification.entity';
 import { UsersService } from './users.service';
 
+const JWT_SIGNED_TOKEN = faker.random.alphaNumeric(20);
+
 const mockJwtService = {
-  sign: jest.fn().mockReturnValue('signed-token'),
+  sign: jest.fn().mockReturnValue(JWT_SIGNED_TOKEN),
   verify: jest.fn(),
 };
 
@@ -47,15 +50,11 @@ describe('UsersService', () => {
       ],
     }).compile();
 
-    usersService = module.get<UsersService>(UsersService);
-    mailService = module.get<MailService>(MailService);
-    jwtService = module.get<JwtService>(JwtService);
-    usersRepository = module.get<MockRepository<User>>(
-      getRepositoryToken(User),
-    );
-    verificationsRepository = module.get<MockRepository<Verification>>(
-      getRepositoryToken(Verification),
-    );
+    usersService = module.get(UsersService);
+    mailService = module.get(MailService);
+    jwtService = module.get(JwtService);
+    usersRepository = module.get(getRepositoryToken(User));
+    verificationsRepository = module.get(getRepositoryToken(Verification));
   });
 
   it('should be defined', () => {
@@ -64,16 +63,14 @@ describe('UsersService', () => {
 
   describe('createAccount', () => {
     const createAccountInput = {
-      email: 'test@mail.com',
-      password: 'testPassword',
+      email: faker.internet.email(),
+      password: faker.internet.password(),
       role: UserRole.Client,
     };
 
     it('should fail if email is already in use', async () => {
-      usersRepository.findOneBy.mockResolvedValue({
-        id: 1,
-        email: 'test@mail.com',
-      });
+      const emailInUse = true;
+      usersRepository.findOneBy.mockResolvedValue(emailInUse);
 
       const result = await usersService.createAccount(createAccountInput);
 
@@ -84,19 +81,30 @@ describe('UsersService', () => {
     });
 
     it('should create a new user', async () => {
+      const createdUser = {
+        email: createAccountInput.email,
+      };
+      const createdVerification = {
+        code: faker.random.alphaNumeric(20),
+      };
+
       usersRepository.findOneBy.mockReturnValue(null);
-      usersRepository.save.mockResolvedValue(createAccountInput);
-      verificationsRepository.save.mockResolvedValue({ code: 'random-code' });
+      usersRepository.create.mockReturnValue(createdUser);
+      usersRepository.save.mockResolvedValue(createdUser);
+      verificationsRepository.create.mockReturnValue(createdVerification);
+      verificationsRepository.save.mockResolvedValue(createdVerification);
 
       const result = await usersService.createAccount(createAccountInput);
 
       expect(usersRepository.create).toBeCalledWith(createAccountInput);
+      expect(usersRepository.save).toBeCalledWith(createdUser);
       expect(verificationsRepository.create).toBeCalledWith({
-        user: createAccountInput,
+        user: createdUser,
       });
+      expect(verificationsRepository.save).toBeCalledWith(createdVerification);
       expect(mailService.sendVerificationEmail).toBeCalledWith(
         createAccountInput.email,
-        'random-code',
+        createdVerification.code,
       );
       expect(result).toEqual({ ok: true });
     });
@@ -112,8 +120,8 @@ describe('UsersService', () => {
 
   describe('login', () => {
     const loginInput = {
-      email: 'test@mail.com',
-      password: 'testPassword',
+      email: faker.internet.email(),
+      password: faker.internet.password(),
     };
 
     it('should fail if user with given email does not exist', async () => {
@@ -128,10 +136,10 @@ describe('UsersService', () => {
     });
 
     it('should fail if given password is wrong', async () => {
-      const mockedUser = {
+      const foundUser = {
         checkPassword: jest.fn().mockResolvedValue(false),
       };
-      usersRepository.findOneBy.mockResolvedValue(mockedUser);
+      usersRepository.findOneBy.mockResolvedValue(foundUser);
 
       const result = await usersService.login(loginInput);
 
@@ -142,18 +150,18 @@ describe('UsersService', () => {
     });
 
     it('should return token if login is successful', async () => {
-      const mockedUser = {
-        id: 1,
+      const foundUser = {
+        id: faker.datatype.number(),
         checkPassword: jest.fn().mockResolvedValue(true),
       };
-      usersRepository.findOneBy.mockResolvedValue(mockedUser);
+      usersRepository.findOneBy.mockResolvedValue(foundUser);
 
       const result = await usersService.login(loginInput);
 
-      expect(jwtService.sign).toBeCalledWith(mockedUser.id);
+      expect(jwtService.sign).toBeCalledWith(foundUser.id);
       expect(result).toEqual({
         ok: true,
-        token: 'signed-token',
+        token: JWT_SIGNED_TOKEN,
       });
     });
 
@@ -168,7 +176,7 @@ describe('UsersService', () => {
 
   describe('findById', () => {
     const findByIdInput = {
-      userId: 1,
+      userId: faker.datatype.number(),
     };
 
     it('should fail if user does not exist with given id', async () => {
@@ -183,13 +191,16 @@ describe('UsersService', () => {
     });
 
     it('should return user with given id', async () => {
-      usersRepository.findOneBy.mockResolvedValue({ id: 1 });
+      const foundUser = {
+        id: findByIdInput.userId,
+      };
+      usersRepository.findOneBy.mockResolvedValue(foundUser);
 
       const result = await usersService.findById(findByIdInput);
 
       expect(result).toEqual({
         ok: true,
-        user: { id: 1 },
+        user: foundUser,
       });
     });
 
@@ -203,16 +214,16 @@ describe('UsersService', () => {
   });
 
   describe('editProfile', () => {
-    const userId = 1;
+    const userId = faker.datatype.number();
     const editProfileInput = {
-      email: 'updated@mail.com',
-      password: 'updatedPassword',
+      email: faker.internet.email(),
+      password: faker.internet.password(),
     };
-    const verificationId = 10;
-    const verificationCode = 'random-code';
+    const verificationId = faker.datatype.number();
+    const verificationCode = faker.random.alphaNumeric(20);
 
     it('should fail if email is already in use', async () => {
-      usersRepository.findOneBy.mockResolvedValue({ id: 2 });
+      usersRepository.findOneBy.mockResolvedValue(true);
 
       const result = await usersService.editProfile(userId, editProfileInput);
 
@@ -220,11 +231,11 @@ describe('UsersService', () => {
     });
 
     it('should change email', async () => {
-      const newUser = {
+      const updatedUser = {
         email: editProfileInput.email,
       };
       usersRepository.findOneBy.mockResolvedValueOnce(null);
-      usersRepository.findOneBy.mockResolvedValue(newUser);
+      usersRepository.findOneBy.mockResolvedValue(updatedUser);
       verificationsRepository.findOneBy.mockResolvedValue({
         id: verificationId,
       });
@@ -245,28 +256,31 @@ describe('UsersService', () => {
         user: { id: userId },
       });
       expect(verificationsRepository.delete).toBeCalledWith(verificationId);
-      expect(verificationsRepository.create).toBeCalledWith({ user: newUser });
+      expect(verificationsRepository.create).toBeCalledWith({
+        user: updatedUser,
+      });
       expect(mailService.sendVerificationEmail).toBeCalledWith(
-        newUser.email,
+        updatedUser.email,
         verificationCode,
       );
       expect(result).toEqual({ ok: true });
     });
 
     it('should change password', async () => {
-      const user = {
-        password: 'oldPassword',
+      const foundUser = {
+        password: faker.internet.password(),
       };
-      usersRepository.findOneBy.mockResolvedValueOnce(user);
+      const updatedUser = {
+        password: editProfileInput.password,
+      };
+      usersRepository.findOneBy.mockResolvedValueOnce(foundUser);
 
       const result = await usersService.editProfile(userId, {
         ...editProfileInput,
         email: undefined,
       });
 
-      expect(usersRepository.save).toBeCalledWith({
-        password: editProfileInput.password,
-      });
+      expect(usersRepository.save).toBeCalledWith(updatedUser);
       expect(result).toEqual({ ok: true });
     });
 
@@ -281,7 +295,7 @@ describe('UsersService', () => {
 
   describe('verifyEmail', () => {
     const verifyEmailInput = {
-      code: 'random-code',
+      code: faker.random.alphaNumeric(20),
     };
 
     it('should fail if verification with given code does not exist', async () => {
@@ -296,24 +310,21 @@ describe('UsersService', () => {
     });
 
     it('should verify email', async () => {
-      const mockedVerification = {
-        id: 10,
+      const foundVerification = {
+        id: faker.datatype.number(),
         user: {
-          id: 1,
+          id: faker.datatype.number(),
         },
       };
-      verificationsRepository.findOne.mockResolvedValue(mockedVerification);
+      verificationsRepository.findOne.mockResolvedValue(foundVerification);
 
       const result = await usersService.verifyEmail(verifyEmailInput);
 
-      expect(usersRepository.update).toBeCalledWith(
-        mockedVerification.user.id,
-        {
-          verified: true,
-        },
-      );
+      expect(usersRepository.update).toBeCalledWith(foundVerification.user.id, {
+        verified: true,
+      });
       expect(verificationsRepository.delete).toBeCalledWith(
-        mockedVerification.id,
+        foundVerification.id,
       );
       expect(result).toEqual({ ok: true });
     });
