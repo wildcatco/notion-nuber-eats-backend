@@ -1,21 +1,11 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { mockRepository } from 'src/test-common/helpers';
+import { MockRepository } from 'src/test-common/types';
 import { User } from 'src/users/entities/user.entity';
-import { Repository } from 'typeorm';
 import { Dish } from '../entities/dish.entity';
 import { Restaurant } from '../entities/restaurant.entity';
 import { DishesService } from './dishes.service';
-
-const mockRepository = () => ({
-  findOne: jest.fn(),
-  findOneBy: jest.fn(),
-  save: jest.fn(),
-  create: jest.fn(),
-  update: jest.fn(),
-  delete: jest.fn(),
-});
-
-type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
 
 describe('DishesService', () => {
   let dishesService: DishesService;

@@ -2,22 +2,10 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Category } from 'src/restaurants/entities/category.entity';
 import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
-import { Repository } from 'typeorm';
+import { mockRepository } from 'src/test-common/helpers';
+import { MockRepository } from 'src/test-common/types';
 import { CategoryRepository } from '../repositories/category.repository';
 import { CategoriesService } from './categories.service';
-
-const mockRepository = () => ({
-  find: jest.fn(),
-  findOne: jest.fn(),
-  findOneBy: jest.fn(),
-  save: jest.fn(),
-  create: jest.fn(),
-  update: jest.fn(),
-  delete: jest.fn(),
-  count: jest.fn(),
-});
-
-type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
 
 describe('CategoriesService', () => {
   let categoriesService: CategoriesService;

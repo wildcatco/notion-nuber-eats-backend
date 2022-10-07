@@ -1,20 +1,12 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { MailService } from 'src/mail/mail.service';
-import { Repository } from 'typeorm';
+import { mockRepository } from 'src/test-common/helpers';
+import { MockRepository } from 'src/test-common/types';
 import { JwtService } from './../jwt/jwt.service';
 import { User, UserRole } from './entities/user.entity';
 import { Verification } from './entities/verification.entity';
 import { UsersService } from './users.service';
-
-const mockRepository = () => ({
-  findOne: jest.fn(),
-  findOneBy: jest.fn(),
-  save: jest.fn(),
-  create: jest.fn(),
-  update: jest.fn(),
-  delete: jest.fn(),
-});
 
 const mockJwtService = {
   sign: jest.fn().mockReturnValue('signed-token'),
@@ -24,8 +16,6 @@ const mockJwtService = {
 const mockMailService = {
   sendVerificationEmail: jest.fn(),
 };
-
-type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
 
 describe('UsersService', () => {
   let usersService: UsersService;
