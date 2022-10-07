@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { mockRepository } from 'src/test-common/helpers';
@@ -5,6 +6,7 @@ import { MockRepository } from 'src/test-common/types';
 import { User } from 'src/users/entities/user.entity';
 import { Dish } from '../entities/dish.entity';
 import { Restaurant } from '../entities/restaurant.entity';
+import { CreateDishInput } from './../dtos/dishes/create-dish.dto';
 import { DishesService } from './dishes.service';
 
 describe('DishesService', () => {
@@ -41,24 +43,29 @@ describe('DishesService', () => {
   });
 
   const owner = {
-    id: 1,
+    id: faker.datatype.number(),
   } as User;
 
   describe('createDish', () => {
     const createDishInput = {
-      restaurantId: 10,
-      name: 'golden olive chicken',
-      description: 'delicious chicken',
-      price: 10.5,
-      options: [],
-    };
+      restaurantId: faker.datatype.number(),
+      name: faker.commerce.product(),
+      description: faker.lorem.text(),
+      price: faker.datatype.float({ min: 1, max: 100 }),
+      options: [
+        {
+          name: 'Spice Level',
+          choices: [{ name: 'LittleBit' }, { name: 'Kill Me' }],
+        },
+      ],
+    } as CreateDishInput;
 
     it('should create dish', async () => {
-      const mockedRestaurant = { ownerId: owner.id };
-      const mockedDish = 'dish';
+      const foundRestaurant = { ownerId: owner.id };
+      const createdDish = { name: createDishInput.name } as Dish;
 
-      restaurantsRepository.findOneBy.mockResolvedValue(mockedRestaurant);
-      dishesRepository.create.mockReturnValue(mockedDish);
+      restaurantsRepository.findOneBy.mockResolvedValue(foundRestaurant);
+      dishesRepository.create.mockReturnValue(createdDish);
 
       const result = await dishesService.createDish(owner, createDishInput);
 
@@ -67,9 +74,9 @@ describe('DishesService', () => {
         description: createDishInput.description,
         price: createDishInput.price,
         options: createDishInput.options,
-        restaurant: mockedRestaurant,
+        restaurant: foundRestaurant,
       });
-      expect(dishesRepository.save).toBeCalledWith(mockedDish);
+      expect(dishesRepository.save).toBeCalledWith(createdDish);
 
       expect(result).toEqual({
         ok: true,
@@ -88,9 +95,9 @@ describe('DishesService', () => {
     });
 
     it('should fail if not owner', async () => {
-      const mockedRestaurant = { ownerId: 999 };
+      const foundRestaurant = { ownerId: 999 };
 
-      restaurantsRepository.findOneBy.mockResolvedValue(mockedRestaurant);
+      restaurantsRepository.findOneBy.mockResolvedValue(foundRestaurant);
 
       const result = await dishesService.createDish(owner, createDishInput);
 
@@ -114,22 +121,21 @@ describe('DishesService', () => {
 
   describe('editDish', () => {
     const editDishInput = {
-      dishId: 10,
-      name: 'new-dish-name',
-      description: 'des',
-      price: 1.1,
-      options: [],
+      dishId: faker.datatype.number(),
+      name: faker.commerce.product(),
+      description: faker.lorem.text(),
+      price: faker.datatype.float({ min: 1, max: 100 }),
     };
 
     it('should edit dish', async () => {
-      const mockedDish = {
+      const foundDish = {
         restaurant: {
           ownerId: owner.id,
         },
       };
 
-      dishesRepository.findOne.mockResolvedValue(mockedDish);
-      dishesRepository.create.mockReturnValue(mockedDish);
+      dishesRepository.findOne.mockResolvedValue(foundDish);
+      dishesRepository.create.mockReturnValue(foundDish);
 
       const result = await dishesService.editDish(owner, editDishInput);
 
@@ -138,9 +144,8 @@ describe('DishesService', () => {
         name: editDishInput.name,
         description: editDishInput.description,
         price: editDishInput.price,
-        options: editDishInput.options,
       });
-      expect(dishesRepository.save).toBeCalledWith(mockedDish);
+      expect(dishesRepository.save).toBeCalledWith(foundDish);
 
       expect(result).toEqual({
         ok: true,
@@ -159,13 +164,13 @@ describe('DishesService', () => {
     });
 
     it('should fail if not owner', async () => {
-      const mockedDish = {
+      const foundDish = {
         restaurant: {
           ownerId: 999,
         },
       };
 
-      dishesRepository.findOne.mockResolvedValue(mockedDish);
+      dishesRepository.findOne.mockResolvedValue(foundDish);
 
       const result = await dishesService.editDish(owner, editDishInput);
 
@@ -189,7 +194,7 @@ describe('DishesService', () => {
 
   describe('deleteDish', () => {
     const deleteDishInput = {
-      dishId: 10,
+      dishId: faker.datatype.number(),
     };
 
     it('should delete dish', async () => {
@@ -221,13 +226,13 @@ describe('DishesService', () => {
     });
 
     it('should fail if not owner', async () => {
-      const mockedDish = {
+      const foundDish = {
         restaurant: {
           ownerId: 999,
         },
       };
 
-      dishesRepository.findOne.mockResolvedValue(mockedDish);
+      dishesRepository.findOne.mockResolvedValue(foundDish);
 
       const result = await dishesService.deleteDish(owner, deleteDishInput);
 

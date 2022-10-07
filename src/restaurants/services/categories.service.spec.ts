@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Category } from 'src/restaurants/entities/category.entity';
@@ -40,13 +41,17 @@ describe('CategoriesService', () => {
 
   describe('allCategories', () => {
     it('should return all categories', async () => {
-      categoriesRepository.find.mockResolvedValue(['category1', 'category2']);
+      const mockedCategories = [
+        { id: faker.datatype.number },
+        { id: faker.datatype.number },
+      ];
+      categoriesRepository.find.mockResolvedValue(mockedCategories);
 
       const result = await categoriesService.allCategories();
 
       expect(result).toEqual({
         ok: true,
-        categories: ['category1', 'category2'],
+        categories: mockedCategories,
       });
     });
 
@@ -64,7 +69,7 @@ describe('CategoriesService', () => {
 
   describe('countRestaurantWithCategory', () => {
     const category = {
-      id: 10,
+      id: faker.datatype.number(),
     } as Category;
 
     it('should count restaurants with category', async () => {
