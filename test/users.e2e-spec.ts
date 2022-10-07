@@ -1,6 +1,8 @@
+import { faker } from '@faker-js/faker';
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { GRAPHQL_ENDPOINT } from 'src/test-common/constants';
 import { User } from 'src/users/entities/user.entity';
 import * as request from 'supertest';
 import { DataSource, Repository } from 'typeorm';
@@ -13,10 +15,9 @@ jest.mock('got', () => {
   };
 });
 
-const GRAPHQL_ENDPOINT = '/graphql';
 const TEST_USER = {
-  email: 'test@mail.com',
-  password: '12345',
+  email: faker.internet.email(),
+  password: faker.internet.password(),
 };
 
 describe('UserModule (e2e)', () => {
@@ -135,7 +136,8 @@ describe('UserModule (e2e)', () => {
     });
 
     it('should fail to login if password is wrong', () => {
-      return publicRequest(loginQuery(TEST_USER.email, 'wrongPassword'))
+      const wrongPassword = faker.internet.password();
+      return publicRequest(loginQuery(TEST_USER.email, wrongPassword))
         .expect(200)
         .expect((res) => {
           const { ok, error, token } = res.body.data.login;
@@ -162,6 +164,7 @@ describe('UserModule (e2e)', () => {
     }
     `;
     let userId: number;
+
     beforeAll(async () => {
       const [user] = await usersRepository.find();
       userId = user.id;
@@ -180,7 +183,8 @@ describe('UserModule (e2e)', () => {
     });
 
     it('should not find a profile with non-existing id', () => {
-      return privateRequest(userProfileQuery(999), jwtToken)
+      const nonExistingId = 999;
+      return privateRequest(userProfileQuery(nonExistingId), jwtToken)
         .expect(200)
         .expect((res) => {
           const { ok, error, user } = res.body.data.userProfile;
@@ -230,6 +234,10 @@ describe('UserModule (e2e)', () => {
   });
 
   describe('editProfile', () => {
+    const newEmail = faker.internet.email();
+    const newPassword = faker.internet.password();
+    const newEmail2 = faker.internet.email();
+    const newPassword2 = faker.internet.password();
     const editProfileQuery = (email: string, password: string) => `
     mutation {
       editProfile(input: {
@@ -243,7 +251,7 @@ describe('UserModule (e2e)', () => {
     `;
 
     it('should change email', () => {
-      return privateRequest(editProfileQuery('new@mail.com', null), jwtToken)
+      return privateRequest(editProfileQuery(newEmail, null), jwtToken)
         .expect(200)
         .expect((res) => {
           const { ok, error } = res.body.data.editProfile;
@@ -254,7 +262,7 @@ describe('UserModule (e2e)', () => {
     });
 
     it('should change password', () => {
-      return privateRequest(editProfileQuery(null, 'newPassword'), jwtToken)
+      return privateRequest(editProfileQuery(null, newPassword), jwtToken)
         .expect(200)
         .expect((res) => {
           const { ok, error } = res.body.data.editProfile;
@@ -265,10 +273,7 @@ describe('UserModule (e2e)', () => {
     });
 
     it('should change both email and password', () => {
-      return privateRequest(
-        editProfileQuery('new2@mail.com', 'newPassword2'),
-        jwtToken,
-      )
+      return privateRequest(editProfileQuery(newEmail2, newPassword2), jwtToken)
         .expect(200)
         .expect((res) => {
           const { ok, error } = res.body.data.editProfile;
@@ -279,7 +284,7 @@ describe('UserModule (e2e)', () => {
     });
 
     it('should login successfully with new email and password', () => {
-      return publicRequest(loginQuery('new2@mail.com', 'newPassword2'))
+      return publicRequest(loginQuery(newEmail2, newPassword2))
         .expect(200)
         .expect((res) => {
           const { ok, error, token } = res.body.data.login;
@@ -291,7 +296,7 @@ describe('UserModule (e2e)', () => {
     });
 
     it('should fail if not logged in', () => {
-      return publicRequest(editProfileQuery('new3@mail.com', 'newPassword3'))
+      return publicRequest(editProfileQuery(newEmail, newPassword))
         .expect(200)
         .expect((res) => {
           const { message } = res.body.errors[0];
@@ -319,7 +324,8 @@ describe('UserModule (e2e)', () => {
     });
 
     it('should fail on wrong verification code', () => {
-      return publicRequest(verifyEmailQuery('wrong-code'))
+      const wrongCode = faker.random.alphaNumeric(20);
+      return publicRequest(verifyEmailQuery(wrongCode))
         .expect(200)
         .expect((res) => {
           const { ok, error } = res.body.data.verifyEmail;
