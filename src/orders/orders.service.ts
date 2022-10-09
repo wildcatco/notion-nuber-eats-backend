@@ -7,10 +7,11 @@ import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
 import { User, UserRole } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { CreateOrderInput, CreateOrderOutput } from './dtos/create-order.dto';
+import { EditOrderInput, EditOrderOutput } from './dtos/edit-order.dto';
 import { GetOrderInput, GetOrderOutput } from './dtos/get-order.dto';
 import { GetOrdersInput, GetOrdersOutput } from './dtos/get-orders.dto';
 import { OrderItem } from './entities/order-item.entity';
-import { Order } from './entities/order.entity';
+import { Order, OrderStatus } from './entities/order.entity';
 
 @Injectable()
 export class OrdersService {
@@ -121,6 +122,14 @@ export class OrdersService {
     });
   }
 
+  canSeeOrder = (order: Order, user: User) => {
+    return (
+      order.customerId === user.id ||
+      order.driverId === user.id ||
+      order.restaurant.ownerId === user.id
+    );
+  };
+
   @CatchError('Failed to load order')
   async getOrder(
     user: User,
@@ -135,16 +144,50 @@ export class OrdersService {
       return errorResponse('Order not found with given id');
     }
 
-    if (
-      order.customerId !== user.id &&
-      order.driverId !== user.id &&
-      order.restaurant.ownerId !== user.id
-    ) {
+    if (!this.canSeeOrder(order, user)) {
       return errorResponse('You cannot see this order');
     }
 
     return successResponse<GetOrderOutput>({
       order,
     });
+  }
+
+  @CatchError('Failed to edit order')
+  async editOrder(
+    user: User,
+    { id, status }: EditOrderInput,
+  ): Promise<EditOrderOutput> {
+    const order = await this.ordersRepository.findOne({
+      where: { id },
+      relations: ['restaurant'],
+    });
+    if (!order) {
+      return errorResponse('Order not found with given id');
+    }
+
+    if (!this.canSeeOrder(order, user)) {
+      return errorResponse('You cannot edit this order');
+    }
+
+    let canEdit = true;
+    if (user.role === UserRole.Owner) {
+      if (status !== OrderStatus.Cooking && status !== OrderStatus.Cooked) {
+        canEdit = false;
+      }
+    }
+    if (user.role === UserRole.Delivery) {
+      if (status !== OrderStatus.PickedUp && status !== OrderStatus.Delivered) {
+        canEdit = false;
+      }
+    }
+
+    if (!canEdit) {
+      return errorResponse(`You cannot change order's status to ${status}`);
+    }
+
+    await this.ordersRepository.update(id, { status });
+
+    return successResponse();
   }
 }
