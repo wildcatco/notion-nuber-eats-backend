@@ -1,0 +1,47 @@
+[
+  {
+    "email": "customer1@mail.com",
+    "password": "testPassword",
+    "role": "Client"
+  },
+  {
+    "email": "customer2@mail.com",
+    "password": "testPassword",
+    "role": "Client"
+  },
+  {
+    "email": "customer3@mail.com",
+    "password": "testPassword",
+    "role": "Client"
+  },
+  {
+    "email": "rider1@mail.com",
+    "password": "testPassword",
+    "role": "Delivery"
+  },
+  {
+    "email": "rider2@mail.com",
+    "password": "testPassword",
+    "role": "Delivery"
+  },
+  {
+    "email": "rider3@mail.com",
+    "password": "testPassword",
+    "role": "Delivery"
+  },
+  {
+    "email": "owner1@mail.com",
+    "password": "testPassword",
+    "role": "Owner"
+  },
+  {
+    "email": "owner2@mail.com",
+    "password": "testPassword",
+    "role": "Owner"
+  },
+  {
+    "email": "owner3@mail.com",
+    "password": "testPassword",
+    "role": "Owner"
+  }
+]
