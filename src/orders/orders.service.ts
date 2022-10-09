@@ -4,9 +4,11 @@ import { CatchError } from 'src/common/common.decorators';
 import { errorResponse, successResponse } from 'src/common/common.helpers';
 import { Dish } from 'src/restaurants/entities/dish.entity';
 import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
-import { User } from 'src/users/entities/user.entity';
+import { User, UserRole } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { CreateOrderInput, CreateOrderOutput } from './dtos/create-order.dto';
+import { GetOrderInput, GetOrderOutput } from './dtos/get-order.dto';
+import { GetOrdersInput, GetOrdersOutput } from './dtos/get-orders.dto';
 import { OrderItem } from './entities/order-item.entity';
 import { Order } from './entities/order.entity';
 
@@ -82,5 +84,67 @@ export class OrdersService {
     );
 
     return successResponse();
+  }
+
+  @CatchError('Failed to load orders')
+  async getOrders(
+    user: User,
+    { status }: GetOrdersInput,
+  ): Promise<GetOrdersOutput> {
+    let orders: Order[];
+    if (user.role === UserRole.Client) {
+      orders = await this.ordersRepository.findBy({
+        customer: { id: user.id },
+        status,
+      });
+    } else if (user.role === UserRole.Delivery) {
+      orders = await this.ordersRepository.findBy({
+        driver: { id: user.id },
+        status,
+      });
+    } else if (user.role === UserRole.Owner) {
+      const restaurants = await this.restaurantsRepository.find({
+        where: {
+          owner: { id: user.id },
+        },
+        relations: ['orders'],
+      });
+
+      orders = restaurants.map((restaurant) => restaurant.orders).flat();
+      if (status) {
+        orders = orders.filter((order) => order.status === status);
+      }
+    }
+
+    return successResponse<GetOrdersOutput>({
+      orders,
+    });
+  }
+
+  @CatchError('Failed to load order')
+  async getOrder(
+    user: User,
+    { id: orderId }: GetOrderInput,
+  ): Promise<GetOrdersOutput> {
+    const order = await this.ordersRepository.findOne({
+      where: { id: orderId },
+      relations: ['restaurant'],
+    });
+
+    if (!order) {
+      return errorResponse('Order not found with given id');
+    }
+
+    if (
+      order.customerId !== user.id &&
+      order.driverId !== user.id &&
+      order.restaurant.ownerId !== user.id
+    ) {
+      return errorResponse('You cannot see this order');
+    }
+
+    return successResponse<GetOrderOutput>({
+      order,
+    });
   }
 }
