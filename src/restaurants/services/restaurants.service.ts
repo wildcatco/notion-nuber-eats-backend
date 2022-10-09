@@ -116,7 +116,7 @@ export class RestaurantsService {
     owner: User,
     { restaurantId }: DeleteRestaurantInput,
   ): Promise<DeleteRestaurantOutput> {
-    const error = await this.checkOwner(restaurantId, owner.id, 'edit');
+    const error = await this.checkOwner(restaurantId, owner.id, 'delete');
     if (error) {
       return errorResponse(error);
     }
@@ -143,7 +143,7 @@ export class RestaurantsService {
     });
   }
 
-  @CatchError('Failed to load restaurant')
+  @CatchError('Failed to find restaurant')
   async findRestaurantById({
     restaurantId,
   }: RestaurantInput): Promise<RestaurantOutput> {

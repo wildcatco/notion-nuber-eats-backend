@@ -6,11 +6,11 @@ import { CoreOutput } from './core-output.dto';
 export class PaginationInput {
   @Field((type) => Int, { defaultValue: 1 })
   @IsNumber()
-  page: number;
+  page?: number;
 
   @Field((type) => Int, { defaultValue: 25 })
   @IsNumber()
-  offset: number;
+  offset?: number;
 }
 
 @ObjectType()

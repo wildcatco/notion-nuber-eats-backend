@@ -7,4 +7,5 @@ export const mockRepository = () => ({
   update: jest.fn(),
   delete: jest.fn(),
   count: jest.fn(),
+  findAndCount: jest.fn(),
 });
