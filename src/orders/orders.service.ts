@@ -1,5 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { PubSub } from 'graphql-subscriptions';
+import { NEW_PENDING_ORDER, PUB_SUB } from 'src/common/common.constants';
 import { CatchError } from 'src/common/common.decorators';
 import { errorResponse, successResponse } from 'src/common/common.helpers';
 import { Dish } from 'src/restaurants/entities/dish.entity';
@@ -24,6 +26,7 @@ export class OrdersService {
     private readonly dishesRepository: Repository<Dish>,
     @InjectRepository(Restaurant)
     private readonly restaurantsRepository: Repository<Restaurant>,
+    @Inject(PUB_SUB) private readonly pubSub: PubSub,
   ) {}
 
   @CatchError('Failed to create order')
@@ -75,7 +78,7 @@ export class OrdersService {
       orderItems.push(orderItem);
     }
 
-    await this.ordersRepository.save(
+    const order = await this.ordersRepository.save(
       this.ordersRepository.create({
         customer,
         restaurant,
@@ -83,6 +86,10 @@ export class OrdersService {
         items: orderItems,
       }),
     );
+
+    await this.pubSub.publish(NEW_PENDING_ORDER, {
+      pendingOrders: { order, ownerId: restaurant.ownerId },
+    });
 
     return successResponse();
   }

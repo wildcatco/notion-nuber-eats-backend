@@ -92,7 +92,6 @@ export async function createDish(dish: CreateDishInput, token: string) {
     }
   }
   `;
-  console.log(query);
 
   const result = await got.post('http://localhost:3000/graphql', {
     headers: { 'X-JWT': token },
@@ -100,6 +99,4 @@ export async function createDish(dish: CreateDishInput, token: string) {
       query: query,
     },
   });
-
-  console.log(result.body);
 }
