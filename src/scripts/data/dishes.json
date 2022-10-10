@@ -1,0 +1,47 @@
+[
+  {
+    "owner": "owner1@mail.com",
+    "restaurantId": 1,
+    "name": "후라이드 치킨",
+    "price": 9,
+    "description": "맛있는 후라이드 치킨",
+    "options": [
+      { "name": "Pickle", "extra": 1 },
+      {
+        "name": "Size",
+        "choices": [
+          { "name": "L", "extra": 1 },
+          { "name": "XL", "extra": 5 }
+        ]
+      }
+    ]
+  },
+  {
+    "owner": "owner1@mail.com",
+    "restaurantId": 1,
+    "name": "양념 치킨",
+    "price": 10,
+    "description": "맛있는 양념 치킨",
+    "options": [
+      {
+        "name": "Spice Level",
+        "choices": [{ "name": "Little Bit" }, { "name": "Kill Me" }]
+      },
+      { "name": "Pickle", "extra": 1 },
+      {
+        "name": "Size",
+        "choices": [
+          { "name": "L", "extra": 1 },
+          { "name": "XL", "extra": 5 }
+        ]
+      }
+    ]
+  },
+  {
+    "owner": "owner2@mail.com",
+    "restaurantId": 5,
+    "name": "토마토 스파게티",
+    "price": 5,
+    "description": "맛있는 토마토 스파게티"
+  }
+]

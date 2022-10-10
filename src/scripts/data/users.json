@@ -38,10 +38,5 @@
     "email": "owner2@mail.com",
     "password": "testPassword",
     "role": "Owner"
-  },
-  {
-    "email": "owner3@mail.com",
-    "password": "testPassword",
-    "role": "Owner"
   }
 ]

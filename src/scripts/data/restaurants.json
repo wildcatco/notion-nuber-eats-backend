@@ -1,29 +1,34 @@
 [
   {
+    "owner": "owner1@mail.com",
     "name": "BHC치킨 양양점",
     "address": "광진구 화양동 23-27",
     "coverImg": "sample-img-url",
     "categoryName": "치킨"
   },
   {
+    "owner": "owner1@mail.com",
     "name": "보드람 치킨",
     "address": "중구 신당동 251-108",
     "coverImg": "sample-img-url",
     "categoryName": "치킨"
   },
   {
+    "owner": "owner1@mail.com",
     "name": "교촌킨킨 왕십리점",
     "address": "성동구 하왕십리동 946-15",
     "coverImg": "sample-img-url",
     "categoryName": "치킨"
   },
   {
+    "owner": "owner2@mail.com",
     "name": "돼지게티 답십점점",
     "address": "동대문구 답십리동 41상가",
     "coverImg": "sample-img-url",
     "categoryName": "양식"
   },
   {
+    "owner": "owner2@mail.com",
     "name": "파스타입니다 답십리점",
     "address": "동대문구 전농동 644-86",
     "coverImg": "sample-img-url",
