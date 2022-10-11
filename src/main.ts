@@ -8,7 +8,6 @@ async function bootstrap() {
     new ValidationPipe({
       enableDebugMessages: true,
       whitelist: true,
-      forbidNonWhitelisted: true,
       ...(process.env.NODE_ENV === 'prod' && { disableErrorMessages: true }),
     }),
   );

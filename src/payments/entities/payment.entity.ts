@@ -1,6 +1,7 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
+import { IsString } from 'class-validator';
 import { User } from 'src/users/entities/user.entity';
-import { Column, Entity, ManyToOne, OneToOne, RelationId } from 'typeorm';
+import { Column, Entity, ManyToOne, RelationId } from 'typeorm';
 import { CoreEntity } from './../../common/entities/base.entity';
 import { Restaurant } from './../../restaurants/entities/restaurant.entity';
 
@@ -8,9 +9,10 @@ import { Restaurant } from './../../restaurants/entities/restaurant.entity';
 @ObjectType()
 @Entity()
 export class Payment extends CoreEntity {
-  @Field((type) => Int)
+  @Field((type) => String)
   @Column()
-  transactionId: number;
+  @IsString()
+  transactionId: string;
 
   @Field((type) => User)
   @ManyToOne((type) => User, (user) => user.payments)
@@ -20,9 +22,10 @@ export class Payment extends CoreEntity {
   userId: number;
 
   @Field((type) => Restaurant)
-  @OneToOne((type) => Restaurant)
+  @ManyToOne((type) => Restaurant)
   restaurant: Restaurant;
 
+  @Field((type) => Int)
   @RelationId((payment: Payment) => payment.restaurant)
   restaurantId: number;
 }
