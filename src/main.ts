@@ -11,7 +11,7 @@ async function bootstrap() {
       ...(process.env.NODE_ENV === 'prod' && { disableErrorMessages: true }),
     }),
   );
-  await app.listen(3000);
+  await app.listen(4000);
 }
 
 bootstrap();
