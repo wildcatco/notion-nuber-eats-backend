@@ -43,10 +43,16 @@ export class CategoriesService {
       return errorResponse('Category not found with given slug');
     }
 
-    const restaurants = category.restaurants.slice(
-      (page - 1) * offset,
-      page * offset,
-    );
+    const restaurants = await this.restaurantsRepository.find({
+      where: {
+        category: { id: category.id },
+      },
+      take: offset,
+      skip: (page - 1) * offset,
+      order: {
+        isPromoted: 'DESC',
+      },
+    });
 
     const totalResults = category.restaurants.length;
     return successResponse<CategoryOutput>({

@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common/decorators';
+import { Interval } from '@nestjs/schedule/dist';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Payment } from 'src/payments/entities/payment.entity';
 import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
 import { User } from 'src/users/entities/user.entity';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { CatchError } from './../common/common.decorators';
 import { errorResponse, successResponse } from './../common/common.helpers';
 import {
@@ -36,6 +37,14 @@ export class PaymentsService {
       return errorResponse('Only owner of the restaurant can create payment');
     }
 
+    restaurant.isPromoted = true;
+
+    const date = new Date();
+    date.setDate(date.getDate() + 7);
+    restaurant.promotedUntil = date;
+
+    await this.restaurantsRepository.save(restaurant);
+
     await this.paymentsRepository.save(
       this.paymentsRepository.create({
         transactionId,
@@ -56,5 +65,19 @@ export class PaymentsService {
     return successResponse<GetPaymentsOutput>({
       payments,
     });
+  }
+
+  @Interval(2000)
+  async checkPromotedRestaurants() {
+    const restaurants = await this.restaurantsRepository.findBy({
+      isPromoted: true,
+      promotedUntil: LessThan(new Date()),
+    });
+
+    restaurants.forEach((restaurant) => {
+      restaurant.isPromoted = false;
+      restaurant.promotedUntil = null;
+    });
+    await this.restaurantsRepository.save(restaurants);
   }
 }

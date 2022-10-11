@@ -134,6 +134,9 @@ export class RestaurantsService {
       await this.restaurantsRepository.findAndCount({
         take: offset,
         skip: (page - 1) * offset,
+        order: {
+          isPromoted: 'DESC',
+        },
       });
 
     return successResponse<RestaurantsOutput>({
