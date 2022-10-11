@@ -17,6 +17,7 @@ import { CreateOrderInput, CreateOrderOutput } from './dtos/create-order.dto';
 import { EditOrderInput, EditOrderOutput } from './dtos/edit-order.dto';
 import { GetOrderInput, GetOrderOutput } from './dtos/get-order.dto';
 import { GetOrdersInput, GetOrdersOutput } from './dtos/get-orders.dto';
+import { TakeOrderInput, TakeOrderOutput } from './dtos/take-order.dto';
 import { OrderItem } from './entities/order-item.entity';
 import { Order, OrderStatus } from './entities/order.entity';
 
@@ -212,6 +213,32 @@ export class OrdersService {
 
     await this.pubSub.publish(NEW_ORDER_UPDATE, {
       orderUpdates: updatedOrder,
+    });
+
+    return successResponse();
+  }
+
+  @CatchError('Failed to take order')
+  async takeOrder(
+    driver: User,
+    { id: orderId }: TakeOrderInput,
+  ): Promise<TakeOrderOutput> {
+    const order = await this.ordersRepository.findOneBy({ id: orderId });
+    if (!order) {
+      return errorResponse('Order not found with given id');
+    }
+
+    if (order.driver) {
+      return errorResponse('This order already has a driver');
+    }
+
+    await this.ordersRepository.save({
+      id: orderId,
+      driver,
+    });
+
+    await this.pubSub.publish(NEW_ORDER_UPDATE, {
+      orderUpdates: { ...order, driver },
     });
 
     return successResponse();
