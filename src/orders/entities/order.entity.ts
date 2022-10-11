@@ -32,7 +32,7 @@ export class Order extends CoreEntity {
     nullable: true,
     eager: true,
   })
-  customer: User;
+  customer?: User;
 
   @RelationId((order: Order) => order.customer)
   customerId: number;
