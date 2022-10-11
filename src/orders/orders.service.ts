@@ -1,13 +1,18 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PubSub } from 'graphql-subscriptions';
-import { NEW_PENDING_ORDER, PUB_SUB } from 'src/common/common.constants';
+import {
+  NEW_COOKED_ORDER,
+  NEW_PENDING_ORDER,
+  PUB_SUB,
+} from 'src/common/common.constants';
 import { CatchError } from 'src/common/common.decorators';
 import { errorResponse, successResponse } from 'src/common/common.helpers';
 import { Dish } from 'src/restaurants/entities/dish.entity';
 import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
 import { User, UserRole } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
+import { NEW_ORDER_UPDATE } from './../common/common.constants';
 import { CreateOrderInput, CreateOrderOutput } from './dtos/create-order.dto';
 import { EditOrderInput, EditOrderOutput } from './dtos/edit-order.dto';
 import { GetOrderInput, GetOrderOutput } from './dtos/get-order.dto';
@@ -167,7 +172,7 @@ export class OrdersService {
   ): Promise<EditOrderOutput> {
     const order = await this.ordersRepository.findOne({
       where: { id },
-      relations: ['restaurant'],
+      loadEagerRelations: true,
     });
     if (!order) {
       return errorResponse('Order not found with given id');
@@ -193,7 +198,21 @@ export class OrdersService {
       return errorResponse(`You cannot change order's status to ${status}`);
     }
 
-    await this.ordersRepository.update(id, { status });
+    await this.ordersRepository.save({
+      id,
+      status,
+    });
+
+    const updatedOrder = { ...order, status };
+    if (status === OrderStatus.Cooked) {
+      await this.pubSub.publish(NEW_COOKED_ORDER, {
+        cookedOrders: updatedOrder,
+      });
+    }
+
+    await this.pubSub.publish(NEW_ORDER_UPDATE, {
+      orderUpdates: updatedOrder,
+    });
 
     return successResponse();
   }
