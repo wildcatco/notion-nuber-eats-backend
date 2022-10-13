@@ -34,6 +34,7 @@ const nodeEnv = process.env.NODE_ENV;
       ignoreEnvFile: nodeEnv === 'prod',
       validationSchema: Joi.object({
         NODE_ENV: Joi.valid('dev', 'prod', 'test').required(),
+        SERVER_PORT: Joi.required(),
         DB_HOST: Joi.required(),
         DB_PORT: Joi.required(),
         DB_USERNAME: Joi.required(),
